@@ -1,0 +1,24 @@
+{
+  "name": "orders-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "plugin.name": "pgoutput",
+    "publication.name": "cdc_publication",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "devuser",
+    "database.password": "password",
+    "database.dbname": "devdb",
+    "database.server.name": "demo",
+    "schema.include": "datalake",
+    "table.include.list": "datalake.cdc_events",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.delete.handling.mode": "rewrite",
+    "transforms.unwrap.add.fields": "op,db,table,schema,lsn,source.ts_ms"
+  }
+}

@@ -1,0 +1,344 @@
+[
+  {
+    "topic": "demo.datalake.cdc_events",
+    "partition": 0,
+    "offset": 0,
+    "timestamp": 1637954958583,
+    "timestampType": "CREATE_TIME",
+    "headers": [],
+    "key": {
+      "schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "int16",
+            "optional": false,
+            "field": "order_id"
+          }
+        ],
+        "optional": false,
+        "name": "demo.datalake.cdc_events.Key"
+      },
+      "payload": {
+        "order_id": 10248
+      }
+    },
+    "value": {
+      "schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "int16",
+            "optional": false,
+            "field": "order_id"
+          },
+          {
+            "type": "string",
+            "optional": false,
+            "field": "customer_id"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "name": "io.debezium.time.Date",
+            "version": 1,
+            "field": "order_date"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "name": "io.debezium.time.Date",
+            "version": 1,
+            "field": "required_date"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "name": "io.debezium.time.Date",
+            "version": 1,
+            "field": "shipped_date"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "order_items"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "products"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "customer"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "employee"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "shipper"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "shipment"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.time.ZonedTimestamp",
+            "version": 1,
+            "field": "updated_at"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__op"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__db"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__table"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__schema"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "__lsn"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "__source_ts_ms"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__deleted"
+          }
+        ],
+        "optional": false,
+        "name": "demo.datalake.cdc_events.Value"
+      },
+      "payload": {
+        "order_id": 10248,
+        "customer_id": "VINET",
+        "order_date": 9681,
+        "required_date": 9709,
+        "shipped_date": 9693,
+        "order_items": "[{\"discount\": 0, \"quantity\": 12, \"product_id\": 11, \"unit_price\": 14}, {\"discount\": 0, \"quantity\": 10, \"product_id\": 42, \"unit_price\": 9.8}, {\"discount\": 0, \"quantity\": 5, \"product_id\": 72, \"unit_price\": 34.8}]",
+        "products": "[{\"fax\": null, \"city\": \"Oviedo\", \"phone\": \"(98) 598 76 54\", \"region\": \"Asturias\", \"address\": \"Calle del Rosal 4\", \"country\": \"Spain\", \"picture\": \"\\\\x\", \"homepage\": null, \"product_id\": 11, \"unit_price\": 21, \"category_id\": 4, \"description\": \"Cheeses\", \"postal_code\": \"33007\", \"supplier_id\": 5, \"company_name\": \"Cooperativa de Quesos 'Las Cabras'\", \"contact_name\": \"Antonio del Valle Saavedra\", \"discontinued\": 0, \"product_name\": \"Queso Cabrales\", \"category_name\": \"Dairy Products\", \"contact_title\": \"Export Administrator\", \"reorder_level\": 30, \"units_in_stock\": 22, \"units_on_order\": 30, \"quantity_per_unit\": \"1 kg pkg.\"}, {\"fax\": null, \"city\": \"Singapore\", \"phone\": \"555-8787\", \"region\": null, \"address\": \"471 Serangoon Loop, Suite #402\", \"country\": \"Singapore\", \"picture\": \"\\\\x\", \"homepage\": null, \"product_id\": 42, \"unit_price\": 14, \"category_id\": 5, \"description\": \"Breads, crackers, pasta, and cereal\", \"postal_code\": \"0512\", \"supplier_id\": 20, \"company_name\": \"Leka Trading\", \"contact_name\": \"Chandra Leka\", \"discontinued\": 1, \"product_name\": \"Singaporean Hokkien Fried Mee\", \"category_name\": \"Grains/Cereals\", \"contact_title\": \"Owner\", \"reorder_level\": 0, \"units_in_stock\": 26, \"units_on_order\": 0, \"quantity_per_unit\": \"32 - 1 kg pkgs.\"}, {\"fax\": \"(0544) 60603\", \"city\": \"Ravenna\", \"phone\": \"(0544) 60323\", \"region\": null, \"address\": \"Viale Dante, 75\", \"country\": \"Italy\", \"picture\": \"\\\\x\", \"homepage\": \"#FORMAGGI.HTM#\", \"product_id\": 72, \"unit_price\": 34.8, \"category_id\": 4, \"description\": \"Cheeses\", \"postal_code\": \"48100\", \"supplier_id\": 14, \"company_name\": \"Formaggi Fortini s.r.l.\", \"contact_name\": \"Elio Rossi\", \"discontinued\": 0, \"product_name\": \"Mozzarella di Giovanni\", \"category_name\": \"Dairy Products\", \"contact_title\": \"Sales Representative\", \"reorder_level\": 0, \"units_in_stock\": 14, \"units_on_order\": 0, \"quantity_per_unit\": \"24 - 200 g pkgs.\"}]",
+        "customer": "{\"fax\": \"26.47.15.11\", \"city\": \"Reims\", \"phone\": \"26.47.15.10\", \"region\": null, \"address\": \"59 rue de l'Abbaye\", \"country\": \"France\", \"customer_id\": \"VINET\", \"postal_code\": \"51100\", \"company_name\": \"Vins et alcools Chevalier\", \"contact_name\": \"Paul Henriot\", \"contact_title\": \"Accounting Manager\"}",
+        "employee": "{\"city\": \"London\", \"notes\": \"Steven Buchanan graduated from St. Andrews University, Scotland, with a BSC degree in 1976.  Upon joining the company as a sales representative in 1992, he spent 6 months in an orientation program at the Seattle office and then returned to his permanent post in London.  He was promoted to sales manager in March 1993.  Mr. Buchanan has completed the courses Successful Telemarketing and International Sales Management.  He is fluent in French.\", \"photo\": \"\\\\x\", \"title\": \"Sales Manager\", \"region\": null, \"address\": \"14 Garrett Hill\", \"country\": \"UK\", \"extension\": \"3453\", \"hire_date\": \"1993-10-17\", \"last_name\": \"Buchanan\", \"birth_date\": \"1955-03-04\", \"first_name\": \"Steven\", \"home_phone\": \"(71) 555-4848\", \"photo_path\": \"http://accweb/emmployees/buchanan.bmp\", \"reports_to\": 2, \"employee_id\": 5, \"postal_code\": \"SW1 8JR\", \"territories\": [{\"region_id\": 1, \"territory_id\": \"02903\", \"region_description\": \"Eastern\", \"territory_description\": \"Providence\"}, {\"region_id\": 1, \"territory_id\": \"07960\", \"region_description\": \"Eastern\", \"territory_description\": \"Morristown\"}, {\"region_id\": 1, \"territory_id\": \"08837\", \"region_description\": \"Eastern\", \"territory_description\": \"Edison\"}, {\"region_id\": 1, \"territory_id\": \"10019\", \"region_description\": \"Eastern\", \"territory_description\": \"New York\"}, {\"region_id\": 1, \"territory_id\": \"10038\", \"region_description\": \"Eastern\", \"territory_description\": \"New York\"}, {\"region_id\": 1, \"territory_id\": \"11747\", \"region_description\": \"Eastern\", \"territory_description\": \"Mellvile\"}, {\"region_id\": 1, \"territory_id\": \"14450\", \"region_description\": \"Eastern\", \"territory_description\": \"Fairport\"}], \"title_of_courtesy\": \"Mr.\"}",
+        "shipper": "{\"phone\": \"(503) 555-9931\", \"shipper_id\": 3, \"company_name\": \"Federal Shipping\"}",
+        "shipment": "{\"freight\": 32.38, \"ship_city\": \"Reims\", \"ship_name\": \"Vins et alcools Chevalier\", \"ship_region\": null, \"ship_address\": \"59 rue de l'Abbaye\", \"ship_country\": \"France\", \"ship_postal_code\": \"51100\"}",
+        "updated_at": "2021-11-26T19:24:33.492352Z",
+        "__op": "r",
+        "__db": "devdb",
+        "__table": "cdc_events",
+        "__schema": "datalake",
+        "__lsn": 27955536,
+        "__source_ts_ms": 1637954958039,
+        "__deleted": "false"
+      }
+    },
+    "__confluent_index": 0
+  },
+  {
+    "topic": "demo.datalake.cdc_events",
+    "partition": 0,
+    "offset": 295,
+    "timestamp": 1637954958692,
+    "timestampType": "CREATE_TIME",
+    "headers": [],
+    "key": {
+      "schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "int16",
+            "optional": false,
+            "field": "order_id"
+          }
+        ],
+        "optional": false,
+        "name": "demo.datalake.cdc_events.Key"
+      },
+      "payload": {
+        "order_id": 10542
+      }
+    },
+    "value": {
+      "schema": {
+        "type": "struct",
+        "fields": [
+          {
+            "type": "int16",
+            "optional": false,
+            "field": "order_id"
+          },
+          {
+            "type": "string",
+            "optional": false,
+            "field": "customer_id"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "name": "io.debezium.time.Date",
+            "version": 1,
+            "field": "order_date"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "name": "io.debezium.time.Date",
+            "version": 1,
+            "field": "required_date"
+          },
+          {
+            "type": "int32",
+            "optional": true,
+            "name": "io.debezium.time.Date",
+            "version": 1,
+            "field": "shipped_date"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "order_items"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "products"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "customer"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "employee"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "shipper"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.data.Json",
+            "version": 1,
+            "field": "shipment"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "name": "io.debezium.time.ZonedTimestamp",
+            "version": 1,
+            "field": "updated_at"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__op"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__db"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__table"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__schema"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "__lsn"
+          },
+          {
+            "type": "int64",
+            "optional": true,
+            "field": "__source_ts_ms"
+          },
+          {
+            "type": "string",
+            "optional": true,
+            "field": "__deleted"
+          }
+        ],
+        "optional": false,
+        "name": "demo.datalake.cdc_events.Value"
+      },
+      "payload": {
+        "order_id": 10542,
+        "customer_id": "KOENE",
+        "order_date": 10001,
+        "required_date": 10029,
+        "shipped_date": 10007,
+        "order_items": "[{\"discount\": 0.05, \"quantity\": 15, \"product_id\": 11, \"unit_price\": 21}, {\"discount\": 0.05, \"quantity\": 24, \"product_id\": 54, \"unit_price\": 7.45}]",
+        "products": "[{\"fax\": null, \"city\": \"Oviedo\", \"phone\": \"(98) 598 76 54\", \"region\": \"Asturias\", \"address\": \"Calle del Rosal 4\", \"country\": \"Spain\", \"picture\": \"\\\\x\", \"homepage\": null, \"product_id\": 11, \"unit_price\": 21, \"category_id\": 4, \"description\": \"Cheeses\", \"postal_code\": \"33007\", \"supplier_id\": 5, \"company_name\": \"Cooperativa de Quesos 'Las Cabras'\", \"contact_name\": \"Antonio del Valle Saavedra\", \"discontinued\": 0, \"product_name\": \"Queso Cabrales\", \"category_name\": \"Dairy Products\", \"contact_title\": \"Export Administrator\", \"reorder_level\": 30, \"units_in_stock\": 22, \"units_on_order\": 30, \"quantity_per_unit\": \"1 kg pkg.\"}, {\"fax\": null, \"city\": \"Montréal\", \"phone\": \"(514) 555-9022\", \"region\": \"Québec\", \"address\": \"2960 Rue St. Laurent\", \"country\": \"Canada\", \"picture\": \"\\\\x\", \"homepage\": null, \"product_id\": 54, \"unit_price\": 7.45, \"category_id\": 6, \"description\": \"Prepared meats\", \"postal_code\": \"H1J 1C3\", \"supplier_id\": 25, \"company_name\": \"Ma Maison\", \"contact_name\": \"Jean-Guy Lauzon\", \"discontinued\": 0, \"product_name\": \"Tourtière\", \"category_name\": \"Meat/Poultry\", \"contact_title\": \"Marketing Manager\", \"reorder_level\": 10, \"units_in_stock\": 21, \"units_on_order\": 0, \"quantity_per_unit\": \"16 pies\"}]",
+        "customer": "{\"fax\": null, \"city\": \"Brandenburg\", \"phone\": \"0555-09876\", \"region\": null, \"address\": \"Maubelstr. 90\", \"country\": \"Germany\", \"customer_id\": \"KOENE\", \"postal_code\": \"14776\", \"company_name\": \"Königlich Essen\", \"contact_name\": \"Philip Cramer\", \"contact_title\": \"Sales Associate\"}",
+        "employee": "{\"city\": \"Seattle\", \"notes\": \"Education includes a BA in psychology from Colorado State University in 1970.  She also completed The Art of the Cold Call.  Nancy is a member of Toastmasters International.\", \"photo\": \"\\\\x\", \"title\": \"Sales Representative\", \"region\": \"WA\", \"address\": \"507 - 20th Ave. E.\\\\nApt. 2A\", \"country\": \"USA\", \"extension\": \"5467\", \"hire_date\": \"1992-05-01\", \"last_name\": \"Davolio\", \"birth_date\": \"1948-12-08\", \"first_name\": \"Nancy\", \"home_phone\": \"(206) 555-9857\", \"photo_path\": \"http://accweb/emmployees/davolio.bmp\", \"reports_to\": 2, \"employee_id\": 1, \"postal_code\": \"98122\", \"territories\": [{\"region_id\": 1, \"territory_id\": \"06897\", \"region_description\": \"Eastern\", \"territory_description\": \"Wilton\"}, {\"region_id\": 1, \"territory_id\": \"19713\", \"region_description\": \"Eastern\", \"territory_description\": \"Neward\"}], \"title_of_courtesy\": \"Ms.\"}",
+        "shipper": "{\"phone\": \"(503) 555-9931\", \"shipper_id\": 3, \"company_name\": \"Federal Shipping\"}",
+        "shipment": "{\"freight\": 10.95, \"ship_city\": \"Brandenburg\", \"ship_name\": \"Königlich Essen\", \"ship_region\": null, \"ship_address\": \"Maubelstr. 90\", \"ship_country\": \"Germany\", \"ship_postal_code\": \"14776\"}",
+        "updated_at": "2021-11-26T19:24:33.492352Z",
+        "__op": "r",
+        "__db": "devdb",
+        "__table": "cdc_events",
+        "__schema": "datalake",
+        "__lsn": 27955536,
+        "__source_ts_ms": 1637954958108,
+        "__deleted": "false"
+      }
+    },
+    "__confluent_index": 236
+  }
+]

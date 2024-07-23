@@ -1,0 +1,21 @@
+{
+  "order_id": 10702,
+  "customer_id": "ALFKI",
+  "order_date": 10147,
+  "required_date": 10189,
+  "shipped_date": 10155,
+  "order_items": "[{\"discount\": 0, \"quantity\": 6, \"product_id\": 3, \"unit_price\": 10}, {\"discount\": 0, \"quantity\": 15, \"product_id\": 76, \"unit_price\": 18}]",
+  "products": "[{\"fax\": null, \"city\": \"London\", \"phone\": \"(171) 555-2222\", \"region\": null, \"address\": \"49 Gilbert St.\", \"country\": \"UK\", \"picture\": \"\\\\x\", \"homepage\": null, \"product_id\": 3, \"unit_price\": 10, \"category_id\": 2, \"description\": \"Sweet and savory sauces, relishes, spreads, and seasonings\", \"postal_code\": \"EC1 4SD\", \"supplier_id\": 1, \"company_name\": \"Exotic Liquids\", \"contact_name\": \"Charlotte Cooper\", \"discontinued\": 0, \"product_name\": \"Aniseed Syrup\", \"category_name\": \"Condiments\", \"contact_title\": \"Purchasing Manager\", \"reorder_level\": 25, \"units_in_stock\": 13, \"units_on_order\": 70, \"quantity_per_unit\": \"12 - 550 ml bottles\"}, {\"fax\": null, \"city\": \"Lappeenranta\", \"phone\": \"(953) 10956\", \"region\": null, \"address\": \"Valtakatu 12\", \"country\": \"Finland\", \"picture\": \"\\\\x\", \"homepage\": null, \"product_id\": 76, \"unit_price\": 18, \"category_id\": 1, \"description\": \"Soft drinks, coffees, teas, beers, and ales\", \"postal_code\": \"53120\", \"supplier_id\": 23, \"company_name\": \"Karkki Oy\", \"contact_name\": \"Anne Heikkonen\", \"discontinued\": 0, \"product_name\": \"Lakkalikööri\", \"category_name\": \"Beverages\", \"contact_title\": \"Product Manager\", \"reorder_level\": 20, \"units_in_stock\": 57, \"units_on_order\": 0, \"quantity_per_unit\": \"500 ml\"}]",
+  "customer": "{\"fax\": \"030-0076545\", \"city\": \"Berlin\", \"phone\": \"030-0074321\", \"region\": null, \"address\": \"Obere Str. 57\", \"country\": \"Germany\", \"customer_id\": \"ALFKI\", \"postal_code\": \"12209\", \"company_name\": \"Alfreds Futterkiste\", \"contact_name\": \"Maria Anders\", \"contact_title\": \"Sales Representative\"}",
+  "employee": "{\"city\": \"Redmond\", \"notes\": \"Margaret holds a BA in English literature from Concordia College (1958) and an MA from the American Institute of Culinary Arts (1966).  She was assigned to the London office temporarily from July through November 1992.\", \"photo\": \"\\\\x\", \"title\": \"Sales Representative\", \"region\": \"WA\", \"address\": \"4110 Old Redmond Rd.\", \"country\": \"USA\", \"extension\": \"5176\", \"hire_date\": \"1993-05-03\", \"last_name\": \"Peacock\", \"birth_date\": \"1937-09-19\", \"first_name\": \"Margaret\", \"home_phone\": \"(206) 555-8122\", \"photo_path\": \"http://accweb/emmployees/peacock.bmp\", \"reports_to\": 2, \"employee_id\": 4, \"postal_code\": \"98052\", \"territories\": [{\"region_id\": 1, \"territory_id\": \"20852\", \"region_description\": \"Eastern\", \"territory_description\": \"Rockville\"}, {\"region_id\": 1, \"territory_id\": \"27403\", \"region_description\": \"Eastern\", \"territory_description\": \"Greensboro\"}, {\"region_id\": 1, \"territory_id\": \"27511\", \"region_description\": \"Eastern\", \"territory_description\": \"Cary\"}], \"title_of_courtesy\": \"Mrs.\"}",
+  "shipper": "{\"phone\": \"(503) 555-9831\", \"shipper_id\": 1, \"company_name\": \"Speedy Express\"}",
+  "shipment": "{\"freight\": 23.94, \"ship_city\": \"Berlin\", \"ship_name\": \"Alfred's Futterkiste\", \"ship_region\": null, \"ship_address\": \"Obere Str. 57\", \"ship_country\": \"Germany\", \"ship_postal_code\": \"12209\"}",
+  "updated_at": "2021-11-26T19:42:50.207556Z",
+  "__op": "r",
+  "__db": "devdb",
+  "__table": "cdc_events",
+  "__schema": "datalake",
+  "__lsn": 27955536,
+  "__source_ts_ms": 1637955964124,
+  "__deleted": "false"
+}
