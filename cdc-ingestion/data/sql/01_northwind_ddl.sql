@@ -18,7 +18,7 @@ SET default_with_oids = false;
 CREATE TABLE IF NOT EXISTS customers (
     customer_id uuid DEFAULT gen_random_uuid(),
     company_name character varying(40) NOT NULL,
-    country character varying(40),
+    country_code character varying(2),
     phone character varying(24),
     PRIMARY KEY (customer_id)
 );
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS customers (
 
 CREATE TABLE IF NOT EXISTS employees (
     employee_id uuid DEFAULT gen_random_uuid(),
-    first_name character varying(10) NOT NULL,
+    first_name character varying(20) NOT NULL,
     last_name character varying(20) NOT NULL,
     PRIMARY KEY (employee_id)
 );

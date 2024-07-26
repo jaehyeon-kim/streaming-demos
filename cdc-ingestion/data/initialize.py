@@ -4,41 +4,28 @@ import csv
 import dataclasses
 from faker import Faker
 
-
-@dataclasses.dataclass
-class Supplier:
-    supplier_id: str
-    company_name: str
-
-    @classmethod
-    def generate(cls, fake: Faker):
-        return cls(supplier_id=fake.uuid4(), company_name=fake.company())
-
-
-@dataclasses.dataclass
-class Customer:
-    customer_id: str
-    customer_name: str
-    country: str
-    phone: str
-
-    @classmethod
-    def generate(cls, fake: Faker):
-        return cls(
-            customer_id=fake.uuid4(),
-            customer_name=fake.company(),
-            country=fake.country(),
-            phone=fake.basic_phone_number(),
-        )
+from models import Customer, Employee, Supplier, Product
 
 
 def wirte_to_csv(mapping: list, src_path: str):
     fake = Faker()
     Faker.seed(1237)
+    suppliers = None
     for obj in mapping:
-        items = [
-            dataclasses.asdict(obj["object"].generate(fake)) for _ in range(obj["num"])
-        ]
+        if obj["name"] == "products":
+            items = [
+                dataclasses.asdict(
+                    obj["object"].generate(fake, [s["supplier_id"] for s in suppliers])
+                )
+                for _ in range(obj["num"])
+            ]
+        else:
+            items = [
+                dataclasses.asdict(obj["object"].generate(fake))
+                for _ in range(obj["num"])
+            ]
+            if obj["name"] == "suppliers":
+                suppliers = items
         with open(os.path.join(src_path, "csvs", f"{obj['name']}.csv"), "w") as f:
             w = csv.DictWriter(f, items[0].keys())
             w.writeheader()
@@ -52,7 +39,10 @@ if __name__ == "__main__":
     os.mkdir(os.path.join(src_path, "csvs"))
     print("write initial data sets")
     object_mapping = [
-        {"name": "supplier", "object": Supplier, "num": 30},
-        {"name": "customer", "object": Customer, "num": 100},
+        {"name": "customers", "object": Customer, "num": 200},
+        {"name": "employees", "object": Employee, "num": 100},
+        {"name": "suppliers", "object": Supplier, "num": 60},
+        # product requires supplier ids, should come after supplier
+        {"name": "products", "object": Product, "num": 100},
     ]
     wirte_to_csv(object_mapping, src_path)

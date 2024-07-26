@@ -13,6 +13,7 @@ services:
       - 5432:5432
     volumes:
       - ./data/sql:/docker-entrypoint-initdb.d
+      - ./data/csvs:/tmp
     environment:
       - POSTGRES_DB=devdb
       - POSTGRES_USER=devuser
