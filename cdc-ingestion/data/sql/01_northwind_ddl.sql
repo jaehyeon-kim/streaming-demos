@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS orders (
     required_date date,
     shipped_date date,
     freight real,
+    created_at timestamp,
     PRIMARY KEY (order_id),
     FOREIGN KEY (customer_id) REFERENCES customers,
     FOREIGN KEY (employee_id) REFERENCES employees
