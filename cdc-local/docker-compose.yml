@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    command: ["postgres", "-c", "wal_level=logical"]
+    ports:
+      - 5432:5432
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=develop
+      - POSTGRES_USER=develop
+      - POSTGRES_PASSWORD=password
+      - TZ=Australia/Sydney
+
+volumes:
+  postgres_data:
+    driver: local
+    name: postgres_data
