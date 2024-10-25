@@ -1,7 +1,6 @@
 import os
 import json
 import argparse
-from pprint import pprint
 
 from google.cloud import pubsub_v1
 
@@ -9,7 +8,7 @@ from src import ps_utils
 
 
 def callback(message):
-    pprint(json.loads(message.data.decode())["payload"])
+    print(json.loads(message.data.decode())["payload"])
     message.ack()
 
 
