@@ -19,7 +19,9 @@ extraneous_headers = [
 ]
 
 
-def write_dynamic_data(conn: Connection, schema_name: str = "ecommerce", if_exists: bool = "replace"):
+def write_dynamic_data(
+    conn: Connection, schema_name: str = "ecommerce", if_exists: bool = "replace"
+):
     tbl_map = {
         "users": [],
         "orders": [],
@@ -50,14 +52,22 @@ def write_dynamic_data(conn: Connection, schema_name: str = "ecommerce", if_exis
         df = pd.DataFrame(tbl_map[tbl])
         if len(df) > 0:
             logging.info(f"{if_exists} records, table - {tbl}, # records - {len(df)}")
-            insert_to_db(df=df, tbl_name=tbl, schema_name=schema_name, conn=conn, if_exists=if_exists)
+            insert_to_db(
+                df=df,
+                tbl_name=tbl,
+                schema_name=schema_name,
+                conn=conn,
+                if_exists=if_exists,
+            )
         else:
             logging.info(
                 f"skip records as no user event, table - {tbl}, # records - {len(df)}"
             )
 
 
-def write_static_data(conn: Connection, schema_name: str = "ecommerce", if_exists: bool = "replace"):
+def write_static_data(
+    conn: Connection, schema_name: str = "ecommerce", if_exists: bool = "replace"
+):
     tbl_map = {
         "products": generate_from_csv("products.csv"),
         "dist_centers": generate_from_csv("distribution_centers.csv"),
@@ -66,7 +76,13 @@ def write_static_data(conn: Connection, schema_name: str = "ecommerce", if_exist
         df = pd.DataFrame(tbl_map[tbl])
         if len(df) > 0:
             logging.info(f"{if_exists} records, table - {tbl}, # records - {len(df)}")
-            insert_to_db(df=df, tbl_name=tbl, schema_name=schema_name, conn=conn, if_exists=if_exists)
+            insert_to_db(
+                df=df,
+                tbl_name=tbl,
+                schema_name=schema_name,
+                conn=conn,
+                if_exists=if_exists,
+            )
         else:
             logging.info(f"skip writing, table - {tbl}, # records - {len(df)}")
 

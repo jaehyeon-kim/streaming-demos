@@ -2,3 +2,4 @@ faker
 pandas
 psycopg2-binary
 SQLAlchemy
+google-cloud-pubsub

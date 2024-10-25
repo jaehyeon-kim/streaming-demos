@@ -1,5 +1,4 @@
 version: "3"
-
 services:
   postgres:
     image: postgres:16
@@ -8,13 +7,33 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./initdb:/docker-entrypoint-initdb.d
+      - ./config/postgres:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=develop
-      - POSTGRES_USER=develop
-      - POSTGRES_PASSWORD=password
-      - TZ=Australia/Sydney
+      POSTGRES_DB: develop
+      POSTGRES_USER: develop
+      POSTGRES_PASSWORD: password
+      PGUSER: develop
+      TZ: Australia/Sydney
+  debezium:
+    image: debezium/server:3.0
+    container_name: debezium
+    environment:
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_EMULATOR_NO_AUTH=true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config/debezium:/debezium/config
+    depends_on:
+      - postgres
+    restart: always
+  pubsub:
+    image: google/cloud-sdk:497.0.0-emulators
+    container_name: pubsub
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+    ports:
+      - "8085:8085"
 
 volumes:
   postgres_data:
