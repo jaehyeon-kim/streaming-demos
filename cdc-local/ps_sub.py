@@ -26,7 +26,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--topic",
         "-t",
-        required=True,
         default="demo.ecommerce.orders",
         help="PubSub topic name",
     )
