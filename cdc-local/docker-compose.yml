@@ -18,8 +18,6 @@ services:
   debezium:
     image: debezium/server:3.0
     container_name: debezium
-    ports:
-      - "8080:8080"
     volumes:
       - ./config/debezium:/debezium/config
     depends_on:
