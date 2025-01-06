@@ -1,0 +1,4 @@
+-r ./producer/requirements.txt
+streamlit
+altair[all]
+aiohttp

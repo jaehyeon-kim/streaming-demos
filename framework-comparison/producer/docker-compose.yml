@@ -1,0 +1,75 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./config/:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: develop
+      POSTGRES_USER: develop
+      POSTGRES_PASSWORD: password
+      PGUSER: develop
+      TZ: Australia/Sydney
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U develop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  datagen:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: datagen
+    environment:
+      DB_USER: develop
+      DB_PASS: password
+      DB_HOST: postgres
+      DB_NAME: develop
+    command:
+      - python
+      - generator.py
+      - --wait_for
+      - "0.5"
+      - --max_iter
+      - "-1"
+    volumes:
+      - .:/home/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: producer
+    ports:
+      - "8000:8000"
+    environment:
+      DB_USER: develop
+      DB_PASS: password
+      DB_HOST: postgres
+      DB_NAME: develop
+      LOOKBACK_MINUTES: "5"
+      REFRESH_SECONDS: "5"
+    command:
+      - uvicorn
+      - api:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+    volumes:
+      - .:/home/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+    name: postgres_data
