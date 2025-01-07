@@ -1,6 +1,3 @@
-import json
-
-import aiohttp
 import pandas as pd
 import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
@@ -21,7 +18,7 @@ def load_records(records: list):
     ).issubset(df.columns)
     df["age"] = df["age"].astype(int)
     df["cost"] = df["cost"].astype(float)
-    df["sale_price"] = df["sale_price"].astype(float)
+    df["sale_price"] = df["sale_price"].astype(float).round(1)
     metric_values = {
         "num_orders": df["order_id"].nunique(),
         "num_order_items": df["item_id"].nunique(),
@@ -67,13 +64,50 @@ def generate_metrics(placeholder: DeltaGenerator, metric_items: list = None):
             )
 
 
-async def consume(metric_placeholder: DeltaGenerator):
-    prev_values = {"num_orders": 0, "num_order_items": 0, "total_sales": 0}
-    async with aiohttp.ClientSession() as session:
-        async with session.ws_connect("ws://localhost:8000/ws") as ws:
-            async for msg in ws:
-                metric_values, df = load_records(json.loads(msg.json()))
-                generate_metrics(
-                    metric_placeholder, create_metric_items(metric_values, prev_values)
-                )
-                prev_values = metric_values
+def to_title_case(s: str):
+    return s.replace("_", " ").title()
+
+
+def create_chart_configs(df: pd.DataFrame):
+    chart_cols = [
+        {"x": "country", "y": "sale_price"},
+        {"x": "traffic_source", "y": "sale_price"},
+    ]
+    configs = []
+    for col in chart_cols:
+        data = df[[col["x"], col["y"]]].groupby(col["x"]).sum().reset_index()
+        spec = {
+            "title": f"Revenue by {to_title_case(col['x'])}",
+            "mark": "bar",
+            "encoding": {
+                "x": {
+                    "field": col["x"],
+                    "type": "nominal",
+                    "title": to_title_case(col["x"]),
+                    "sort": "-y",
+                },
+                "y": {"field": col["y"], "type": "quantitative", "title": "Revenue"},
+                "tooltip": [
+                    {
+                        "field": col["x"],
+                        "type": "nominal",
+                        "title": to_title_case(col["x"]),
+                    },
+                    {"field": col["y"], "type": "quantitative", "title": "Revenue"},
+                ],
+                "color": {
+                    "field": col["x"],
+                    "type": "nominal",
+                    "title": to_title_case(col["x"]),
+                },
+            },
+        }
+        configs.append((data, spec))
+    return configs
+
+
+def generate_charts(placeholder: DeltaGenerator, chart_configs: list):
+    with placeholder.container():
+        for i, col in enumerate(st.columns(len(chart_configs))):
+            data, spec = chart_configs[i]
+            col.vega_lite_chart(data=data, spec=spec, use_container_width=True)
