@@ -66,11 +66,6 @@ def generate_metrics(placeholder: DeltaGenerator, metric_items: list = None):
                 label=metric["label"], value=metric["value"], delta=metric["delta"]
             )
 
-
-def to_title_case(s: str):
-    return s.replace("_", " ").title()
-
-
 def create_options_items(df: pd.DataFrame):
     colors = [
         "#00008b",
@@ -107,7 +102,7 @@ def create_options_items(df: pd.DataFrame):
             .sort_values(by=col["y"], ascending=False)
         )
         options = {
-            "title": {"text": f"Revenue by {to_title_case(col['x'])}"},
+            "title": {"text": f"Revenue by {col['x'].replace('_', ' ').title()}"},
             "xAxis": {
                 "type": "category",
                 "data": data[col["x"]].to_list(),
