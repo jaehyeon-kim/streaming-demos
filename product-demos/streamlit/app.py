@@ -6,10 +6,10 @@ import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
 
 from utils import (
-    generate_metrics,
     load_records,
     create_metric_items,
-    create_chart_configs,
+    generate_metrics,
+    create_options_items,
     generate_charts,
 )
 
@@ -25,7 +25,7 @@ async def consume(
                 generate_metrics(
                     metric_placeholder, create_metric_items(metric_values, prev_values)
                 )
-                generate_charts(chart_placeholder, create_chart_configs(df))
+                generate_charts(chart_placeholder, create_options_items(df))
                 prev_values = metric_values
 
 

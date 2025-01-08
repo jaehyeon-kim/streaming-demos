@@ -92,12 +92,15 @@ def main(wait_for: float, max_iter: int, if_exists: str):
     write_static_data(conn=conn, if_exists="replace")
     curr_iter = 0
     while True:
-        write_dynamic_data(conn=conn, if_exists=if_exists)
+        try:
+            write_dynamic_data(conn=conn, if_exists=if_exists)
+            curr_iter += 1
+            if max_iter > 0 and curr_iter >= max_iter:
+                logging.info(f"stop generating records after {curr_iter} iterations")
+                break
+        except Exception as e:
+            logging.error(f"fails to write data - {e}")
         time.sleep(wait_for)
-        curr_iter += 1
-        if max_iter > 0 and curr_iter >= max_iter:
-            logging.info(f"stop generating records after {curr_iter} iterations")
-            break
 
 
 if __name__ == "__main__":

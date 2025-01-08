@@ -1,3 +1,4 @@
 -r ./producer/requirements.txt
 streamlit
 aiohttp
+streamlit-echarts
