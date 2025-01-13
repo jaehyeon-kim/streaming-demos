@@ -2,7 +2,8 @@ import os
 import logging
 import asyncio
 
-from sqlalchemy import create_engine
+import sqlalchemy
+from sqlalchemy import Engine, Connection
 import pandas as pd
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
@@ -16,19 +17,19 @@ except ValueError:
     REFRESH_SECONDS = 5
 
 
-def create_connection(
+def create_engine(
     user: str = os.getenv("DB_USER", "develop"),
     password: str = os.getenv("DB_PASS", "password"),
     host: str = os.getenv("DB_HOST", "localhost"),
     db_name: str = os.getenv("DB_NAME", "develop"),
-    echo: bool = False,
-):
-    return create_engine(
+    echo: bool = True,
+) -> Engine:
+    return sqlalchemy.create_engine(
         f"postgresql+psycopg2://{user}:{password}@{host}/{db_name}", echo=echo
-    ).connect()
+    )
 
 
-def read_from_db(minutes: int = 0):
+def read_from_db(conn: Connection, minutes: int = 0):
     sql = """
     SELECT
         u.id AS user_id
@@ -51,7 +52,7 @@ def read_from_db(minutes: int = 0):
         sql = f"{sql} WHERE o.created_at >= current_timestamp - interval '{minutes} minute'"
     else:
         sql = f"{sql} LIMIT 1"
-    return pd.read_sql(sql=sql, con=create_connection())
+    return pd.read_sql(sql=sql, con=conn)
 
 
 app = FastAPI()
@@ -79,11 +80,15 @@ manager = ConnectionManager()
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
+    engine = create_engine()
+    conn = engine.connect()
     try:
         while True:
-            df = read_from_db(minutes=LOOKBACK_MINUTES)
+            df = read_from_db(conn=conn, minutes=LOOKBACK_MINUTES)
             logging.info(f"{df.shape[0]} records are fetched...")
             await manager.send_records(df, websocket)
             await asyncio.sleep(REFRESH_SECONDS)
     except WebSocketDisconnect:
+        conn.close()
+        engine.dispose()
         manager.disconnect(websocket)
