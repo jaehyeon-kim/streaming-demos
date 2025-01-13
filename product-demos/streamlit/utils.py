@@ -66,17 +66,18 @@ def generate_metrics(placeholder: DeltaGenerator, metric_items: list = None):
                 label=metric["label"], value=metric["value"], delta=metric["delta"]
             )
 
+
 def create_options_items(df: pd.DataFrame):
     colors = [
         "#00008b",
-        "#00247d",
         "#b22234",
+        "#00247d",
         "#f00",
         "#ffde00",
         "#002a8f",
+        "#000",
         "#003580",
         "#ed2939",
-        "#000",
         "#003897",
         "#f93",
         "#bc002d",
@@ -129,4 +130,4 @@ def generate_charts(placeholder: DeltaGenerator, option_items: list):
         for i, col in enumerate(st.columns(len(option_items))):
             options = option_items[i]
             with col:
-                st_echarts(options=options, key=str(uuid4()))
+                st_echarts(options=options, height="500px", key=str(uuid4()))

@@ -14,7 +14,7 @@ from utils import (
 )
 
 
-async def consume(
+async def generate(
     metric_placeholder: DeltaGenerator, chart_placeholder: DeltaGenerator
 ):
     prev_values = {"num_orders": 0, "num_order_items": 0, "total_sales": 0}
@@ -43,7 +43,7 @@ chart_placeholder = st.empty()
 
 if connect:
     asyncio.run(
-        consume(
+        generate(
             metric_placeholder=metric_placeholder, chart_placeholder=chart_placeholder
         )
     )
