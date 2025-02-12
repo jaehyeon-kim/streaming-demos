@@ -80,15 +80,16 @@ manager = ConnectionManager()
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
-    engine = create_engine()
-    conn = engine.connect()
     try:
+        engine = create_engine()
+        conn = engine.connect()
         while True:
             df = read_from_db(conn=conn, minutes=LOOKBACK_MINUTES)
             logging.info(f"{df.shape[0]} records are fetched...")
             await manager.send_records(df, websocket)
             await asyncio.sleep(REFRESH_SECONDS)
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    finally:
         conn.close()
         engine.dispose()
-        manager.disconnect(websocket)
