@@ -2,12 +2,11 @@ import os
 import logging
 import asyncio
 
-import sqlalchemy
-from sqlalchemy import Engine, Connection
+from sqlalchemy import create_engine, Engine, Connection
 import pandas as pd
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
-logging.getLogger().setLevel(logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 try:
     LOOKBACK_MINUTES = int(os.getenv("LOOKBACK_MINUTES", "5"))
@@ -17,19 +16,24 @@ except ValueError:
     REFRESH_SECONDS = 5
 
 
-def create_engine(
-    user: str = os.getenv("DB_USER", "develop"),
-    password: str = os.getenv("DB_PASS", "password"),
-    host: str = os.getenv("DB_HOST", "localhost"),
-    db_name: str = os.getenv("DB_NAME", "develop"),
-    echo: bool = True,
-) -> Engine:
-    return sqlalchemy.create_engine(
-        f"postgresql+psycopg2://{user}:{password}@{host}/{db_name}", echo=echo
-    )
+def get_db_engine() -> Engine:
+    """Creates and returns a SQLAlchemy engine."""
+    user = os.getenv("DB_USER", "develop")
+    password = os.getenv("DB_PASS", "password")
+    host = os.getenv("DB_HOST", "localhost")
+    db_name = os.getenv("DB_NAME", "develop")
+
+    try:
+        return create_engine(
+            f"postgresql+psycopg2://{user}:{password}@{host}/{db_name}", echo=True
+        )
+    except Exception as e:
+        logging.error(f"Database connection error: {e}")
+        raise
 
 
-def read_from_db(conn: Connection, minutes: int = 0):
+def fetch_data(conn: Connection, minutes: int = 0):
+    """Fetches data from the database with an optional lookback filter."""
     sql = """
     SELECT
         u.id AS user_id
@@ -52,26 +56,36 @@ def read_from_db(conn: Connection, minutes: int = 0):
         sql = f"{sql} WHERE o.created_at >= current_timestamp - interval '{minutes} minute'"
     else:
         sql = f"{sql} LIMIT 1"
-    return pd.read_sql(sql=sql, con=conn)
+    try:
+        return pd.read_sql(sql=sql, con=conn)
+    except Exception as e:
+        logging.error(f"Error reading from database: {e}")
+        return pd.DataFrame()
 
 
 app = FastAPI()
 
 
 class ConnectionManager:
+    """Manages WebSocket connections."""
+
     def __init__(self):
         self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
+        logging.info(f"New WebSocket connection: {websocket.client}")
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+            logging.info(f"WebSocket disconnected: {websocket.client}")
 
-    async def send_records(self, df: pd.DataFrame, websocket: WebSocket):
-        records = df.to_json(orient="records")
-        await websocket.send_json(records)
+    async def send_data(self, df: pd.DataFrame, websocket: WebSocket):
+        """Converts DataFrame to JSON and sends it via WebSocket."""
+        if not df.empty:
+            await websocket.send_json(df.to_json(orient="records"))
 
 
 manager = ConnectionManager()
@@ -79,17 +93,21 @@ manager = ConnectionManager()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    """Handles WebSocket connections and continuously streams data."""
     await manager.connect(websocket)
+
+    engine = get_db_engine()
+
     try:
-        engine = create_engine()
-        conn = engine.connect()
-        while True:
-            df = read_from_db(conn=conn, minutes=LOOKBACK_MINUTES)
-            logging.info(f"{df.shape[0]} records are fetched...")
-            await manager.send_records(df, websocket)
-            await asyncio.sleep(REFRESH_SECONDS)
+        with engine.connect() as conn:
+            while True:
+                df = fetch_data(conn, LOOKBACK_MINUTES)
+                logging.info(f"Fetched {df.shape[0]} records from database")
+                await manager.send_data(df, websocket)
+                await asyncio.sleep(REFRESH_SECONDS)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+    except Exception as e:
+        logging.error(f"WebSocket error: {e}")
     finally:
-        conn.close()
         engine.dispose()
