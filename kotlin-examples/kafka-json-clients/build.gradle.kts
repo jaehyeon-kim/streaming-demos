@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.1.10"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     application
 }
 
@@ -24,13 +25,25 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
 kotlin {
     jvmToolchain(17)
 }
 
 application {
     mainClass.set("me.jaehyeon.MainKt")
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveBaseName.set("kafka-json-clients")
+    archiveClassifier.set("")
+    archiveVersion.set("1.0")
+    mergeServiceFiles()
+}
+
+tasks.named("build") {
+    dependsOn("shadowJar")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

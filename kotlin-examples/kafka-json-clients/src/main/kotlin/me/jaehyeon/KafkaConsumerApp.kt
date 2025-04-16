@@ -10,25 +10,28 @@ import java.time.Duration
 import java.util.Properties
 
 object KafkaConsumerApp {
+    private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
+    private val topicName = System.getenv("TOPIC") ?: "users-json"
     private val logger = KotlinLogging.logger { }
 
     fun run() {
         val props =
             Properties().apply {
-                put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getenv("BOOTSTRAP") ?: "localhost:9092")
-                put(ConsumerConfig.GROUP_ID_CONFIG, "users-json-group")
-                put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer::class.java.name)
+                put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
+                put(ConsumerConfig.GROUP_ID_CONFIG, "$topicName-group")
+                put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer")
                 put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, User::class.java.name)
+                put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
                 put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
             }
 
         val consumer = KafkaConsumer<String, User>(props, StringDeserializer(), JsonDeserializer(User::class.java))
         consumer.use {
-            it.subscribe(listOf(System.getenv("TOPIC") ?: "users-json"))
+            it.subscribe(listOf(topicName))
             while (true) {
                 val records = it.poll(Duration.ofMillis(1000))
                 for (record in records) {
-                    logger.info { "Received: ${record.value()}" }
+                    logger.info { "Received ${record.value()} from partition ${record.partition()}, offset ${record.offset()}" }
                 }
             }
         }
