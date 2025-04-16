@@ -44,7 +44,7 @@ sourceSets {
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    archiveBaseName.set("kafka-avro-evolution")
+    archiveBaseName.set("kafka-avro-clients")
     archiveClassifier.set("")
     archiveVersion.set("1.0")
     mergeServiceFiles()

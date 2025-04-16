@@ -2,10 +2,7 @@
 
 package me.jaehyeon
 
-import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
-import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import mu.KotlinLogging
-import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -17,15 +14,6 @@ object KafkaConsumerApp {
     private val topicName = System.getenv("TOPIC") ?: "users-avro"
     private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
     private val logger = KotlinLogging.logger { }
-    private val schemaRegistryClient: SchemaRegistryClient =
-        CachedSchemaRegistryClient(
-            System.getenv("REGISTRY_URL") ?: "http://localhost:8081",
-            100,
-            mapOf(
-                "basic.auth.credentials.source" to "USER_INFO",
-                "schema.registry.basic.auth.user.info" to "admin:admin",
-            ),
-        )
 
     fun run() {
         val props =
@@ -34,6 +22,7 @@ object KafkaConsumerApp {
                 put(ConsumerConfig.GROUP_ID_CONFIG, "$topicName-group")
                 put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer")
                 put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer")
+                put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
                 put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
                 put("specific.avro.reader", false)
                 put("schema.registry.url", registryUrl)
@@ -46,17 +35,9 @@ object KafkaConsumerApp {
             while (true) {
                 val records = consumer.poll(Duration.ofMillis(1000))
                 for (record in records) {
-                    val genericRecord = record.value()
-                    val schema = fetchLatestSchema(topic = record.topic())
-                    logger.info { "Received: ${record.value()}" }
+                    logger.info { "Received ${record.value()} from partition ${record.partition()}, offset ${record.offset()}" }
                 }
             }
         }
-    }
-
-    private fun fetchLatestSchema(topic: String): Schema {
-        val subject = "$topic-value"
-        val metadata = schemaRegistryClient.getLatestSchemaMetadata(subject)
-        return Schema.Parser().parse(metadata.schema)
     }
 }
