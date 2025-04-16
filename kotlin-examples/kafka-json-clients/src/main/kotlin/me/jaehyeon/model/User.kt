@@ -1,6 +1,6 @@
 package me.jaehyeon.model
 
-data class Person(
+data class User(
     val name: String,
     val email: String,
     val age: Int,
