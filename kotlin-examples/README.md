@@ -1,5 +1,49 @@
 ## Getting Started with Kafka and Flink with Kotlin
 
+Example Kafka and Flink applications using Kotlin.
+
+### Applications
+
+- [Kafka JSON Clients](./kafka-json-clients/)
+
+  - Kafka producer and consumer applications with JSON values.
+
+  ```
+   👉 With Gradle (Dev Mode)
+   ./gradlew run --args="producer"
+   ./gradlew run --args="consumer"
+
+   👉 Build Shadow (Fat) JAR:
+   ./gradlew shadowJar
+
+   Resulting JAR:
+   build/libs/kafka-json-clients-1.0.jar
+
+   👉 Run the Fat JAR:
+   java -jar build/libs/kafka-json-clients-1.0.jar producer
+   java -jar build/libs/kafka-json-clients-1.0.jar consumer
+  ```
+
+- [Kafka AVRO Clients](./kafka-avro-clients/)
+
+  - Kafka producer and consumer applications with AVRO values, integrated with the Confluent Schema Registry.
+
+  ```
+   👉 With Gradle (Dev Mode)
+   ./gradlew run --args="producer"
+   ./gradlew run --args="consumer"
+
+   👉 Build Shadow (Fat) JAR:
+   ./gradlew shadowJar
+
+   Resulting JAR:
+   build/libs/kafka-avro-clients-1.0.jar
+
+   👉 Run the Fat JAR:
+   java -jar build/libs/kafka-avro-clients-1.0.jar producer
+   java -jar build/libs/kafka-avro-clients-1.0.jar consumer
+  ```
+
 ### Resources
 
 - Kafka Client
