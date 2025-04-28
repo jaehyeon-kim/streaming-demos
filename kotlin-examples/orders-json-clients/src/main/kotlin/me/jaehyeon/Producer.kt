@@ -41,7 +41,7 @@ object Producer {
                 val order =
                     Order(
                         UUID.randomUUID().toString(),
-                        getBidTime(),
+                        generateBidTime(),
                         faker.number().randomDouble(2, 1, 150),
                         faker.commerce().productName(),
                         faker.regexify("(Alice|Bob|Carol|Alex|Joe|James|Jane|Jack)"),
@@ -84,7 +84,7 @@ object Producer {
         }
     }
 
-    private fun getBidTime(): String {
+    private fun generateBidTime(): String {
         val randomDate = faker.date().past(30, TimeUnit.SECONDS)
         val formatter =
             DateTimeFormatter

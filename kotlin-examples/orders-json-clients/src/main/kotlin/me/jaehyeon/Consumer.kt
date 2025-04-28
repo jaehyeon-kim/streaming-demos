@@ -47,33 +47,33 @@ object Consumer {
             },
         )
 
-        try {
-            consumer.subscribe(listOf(topicName))
+        consumer.use { c ->
+            c.subscribe(listOf(topicName))
             while (keepConsuming) {
-                try {
-                    val records = consumer.poll(Duration.ofMillis(1000))
-                    for (record in records) {
-                        processRecordWithRetry(record)
-                    }
-                } catch (e: WakeupException) {
-                    if (keepConsuming) throw e
-                    logger.info("Consumer wakeup for shutdown.")
-                } catch (e: Exception) {
-                    logger.error(e) { "Unexpected error while polling records" }
+                val records = pollSafely(c)
+                for (record in records) {
+                    processRecordWithRetry(record)
                 }
-            }
-        } catch (e: Exception) {
-            logger.error(e) { "Fatal error in Kafka consumer, existing..." }
-        } finally {
-            logger.info { "Closing Kafka consumer..." }
-            try {
-                consumer.close(Duration.ofSeconds(10))
-                logger.info { "Kafka consumer closed successfully." }
-            } catch (e: Exception) {
-                logger.error(e) { "Error occurred while closing Kafka consumer" }
+                consumer.commitSync()
             }
         }
     }
+
+    private fun pollSafely(consumer: KafkaConsumer<String, Order>) =
+        runCatching { consumer.poll(Duration.ofMillis(1000)) }
+            .getOrElse { e ->
+                when (e) {
+                    is WakeupException -> {
+                        if (keepConsuming) throw e
+                        logger.info { "Consumer wakeup for shutdown." }
+                        emptyList()
+                    }
+                    else -> {
+                        logger.error(e) { "Unexpected error while polling records" }
+                        emptyList()
+                    }
+                }
+            }
 
     private fun processRecordWithRetry(record: ConsumerRecord<String, Order>) {
         var attempt = 0
@@ -84,17 +84,16 @@ object Consumer {
                     throw RuntimeException(
                         "Simulated error for ${record.value()} from partition ${record.partition()}, offset ${record.offset()}",
                     )
-                } else {
-                    logger.info { "Received ${record.value()} from partition ${record.partition()}, offset ${record.offset()}" }
                 }
+                logger.info { "Received ${record.value()} from partition ${record.partition()}, offset ${record.offset()}" }
                 return
             } catch (e: Exception) {
                 logger.warn(e) { "Error processing record (attempt $attempt of $MAX_RETRIES)" }
-                if (attempt >= MAX_RETRIES) {
+                if (attempt == MAX_RETRIES) {
                     logger.error(e) { "Failed to process record after $MAX_RETRIES attempts, skipping..." }
-                } else {
-                    Thread.sleep(500 * attempt.toLong()) // exponential backoff
+                    return
                 }
+                Thread.sleep(500L * attempt.toLong()) // exponential backoff
             }
         }
     }
