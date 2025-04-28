@@ -44,6 +44,11 @@ Example Kafka and Flink applications using Kotlin.
    java -jar build/libs/kafka-avro-clients-1.0.jar consumer
   ```
 
+### Troubleshoot
+
+- `Unresolved reference 'avro'`
+  - run `./gradlew clean build`
+
 ### Resources
 
 - Kafka Client
