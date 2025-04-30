@@ -9,7 +9,7 @@ import org.apache.kafka.common.errors.WakeupException
 import java.time.Duration
 import java.util.Properties
 
-object Consumer {
+object ConsumerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
     private val topicName = System.getenv("TOPIC") ?: "orders-avro"
     private val logger = KotlinLogging.logger { }
@@ -62,7 +62,7 @@ object Consumer {
                 when (e) {
                     is WakeupException -> {
                         if (keepConsuming) throw e
-                        logger.info { "Consumer wakeup for shutdown." }
+                        logger.info { "ConsumerApp wakeup for shutdown." }
                         emptyList()
                     }
                     else -> {

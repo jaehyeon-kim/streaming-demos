@@ -17,7 +17,7 @@ import java.util.Properties
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-object Producer {
+object ProducerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP_ADDRESS") ?: "localhost:9092"
     private val topicName = System.getenv("TOPIC_NAME") ?: "orders-json"
     private const val NUM_PARTITIONS = 3
