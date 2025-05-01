@@ -19,15 +19,15 @@ import java.util.concurrent.TimeUnit
 
 object ProducerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP_ADDRESS") ?: "localhost:9092"
-    private val topicName = System.getenv("TOPIC_NAME") ?: "orders-json"
+    private val inputTopicName = System.getenv("TOPIC_NAME") ?: "orders-json"
     private const val NUM_PARTITIONS = 3
     private const val REPLICATION_FACTOR: Short = 3
     private val logger = KotlinLogging.logger { }
     private val faker = Faker()
 
     fun run() {
-        // create a kafka topic if not existing
-        createTopic()
+        // create the input topic if not existing
+        createTopicIfNotExists(inputTopicName)
 
         val props =
             Properties().apply {
@@ -46,7 +46,7 @@ object ProducerApp {
                         faker.commerce().productName(),
                         faker.regexify("(Alice|Bob|Carol|Alex|Joe|James|Jane|Jack)"),
                     )
-                val record = ProducerRecord(topicName, order.orderId, order)
+                val record = ProducerRecord(inputTopicName, order.orderId, order)
                 producer.send(record) { metadata, exception ->
                     if (exception != null) {
                         logger.error(exception) { "Error sending record" }
@@ -61,7 +61,7 @@ object ProducerApp {
         }
     }
 
-    private fun createTopic() {
+    private fun createTopicIfNotExists(topicName: String) {
         val props =
             Properties().apply {
                 put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
@@ -85,7 +85,7 @@ object ProducerApp {
     }
 
     private fun generateBidTime(): String {
-        val randomDate = faker.date().past(30, TimeUnit.SECONDS)
+        val randomDate = faker.date().past(5, TimeUnit.SECONDS)
         val formatter =
             DateTimeFormatter
                 .ofPattern("yyyy-MM-dd HH:mm:ss")

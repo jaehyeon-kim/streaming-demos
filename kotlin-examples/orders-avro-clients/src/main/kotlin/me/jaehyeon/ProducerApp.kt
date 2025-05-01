@@ -18,22 +18,23 @@ import java.util.concurrent.TimeUnit
 
 object ProducerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
-    private val topicName = System.getenv("TOPIC") ?: "orders-avro"
+    private val inputTopicName = System.getenv("TOPIC_NAME") ?: "orders-avro"
+    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
     private const val NUM_PARTITIONS = 3
     private const val REPLICATION_FACTOR: Short = 3
     private val logger = KotlinLogging.logger {}
     private val faker = Faker()
 
     fun run() {
-        // create a kafka topic if not existing
-        createTopic()
+        // create the input topic if not existing
+        createTopicIfNotExists(inputTopicName)
 
         val props =
             Properties().apply {
                 put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
                 put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer")
                 put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
-                put("schema.registry.url", System.getenv("REGISTRY_URL") ?: "http://localhost:8081")
+                put("schema.registry.url", registryUrl)
                 put("basic.auth.credentials.source", "USER_INFO")
                 put("basic.auth.user.info", "admin:admin")
             }
@@ -48,7 +49,7 @@ object ProducerApp {
                         item = faker.commerce().productName()
                         supplier = faker.regexify("(Alice|Bob|Carol|Alex|Joe|James|Jane|Jack)")
                     }
-                val record = ProducerRecord(topicName, order.orderId, order)
+                val record = ProducerRecord(inputTopicName, order.orderId, order)
                 producer.send(record) { metadata, exception ->
                     if (exception != null) {
                         logger.error(exception) { "Error sending record" }
@@ -63,7 +64,7 @@ object ProducerApp {
         }
     }
 
-    private fun createTopic() {
+    private fun createTopicIfNotExists(topicName: String) {
         val props =
             Properties().apply {
                 put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
@@ -87,7 +88,7 @@ object ProducerApp {
     }
 
     private fun generateBidTime(): String {
-        val randomDate = faker.date().past(30, TimeUnit.SECONDS)
+        val randomDate = faker.date().past(5, TimeUnit.SECONDS)
         val formatter =
             DateTimeFormatter
                 .ofPattern("yyyy-MM-dd HH:mm:ss")

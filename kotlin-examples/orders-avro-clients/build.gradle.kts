@@ -36,6 +36,15 @@ application {
     mainClass.set("me.jaehyeon.MainKt")
 }
 
+avro {
+    setCreateSetters(true)
+    setFieldVisibility("PRIVATE")
+}
+
+tasks.named("compileKotlin") {
+    dependsOn("generateAvroJava")
+}
+
 sourceSets {
     named("main") {
         java.srcDirs("build/generated/avro/main")

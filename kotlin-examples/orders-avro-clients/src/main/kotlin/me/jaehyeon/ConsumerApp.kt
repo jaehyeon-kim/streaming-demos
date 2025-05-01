@@ -12,6 +12,7 @@ import java.util.Properties
 object ConsumerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
     private val topicName = System.getenv("TOPIC") ?: "orders-avro"
+    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
     private val logger = KotlinLogging.logger { }
     private const val MAX_RETRIES = 3
     private const val ERROR_THRESHOLD = -1
@@ -29,7 +30,7 @@ object ConsumerApp {
                 put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
                 put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
                 put("specific.avro.reader", false)
-                put("schema.registry.url", "http://localhost:8081")
+                put("schema.registry.url", registryUrl)
                 put("basic.auth.credentials.source", "USER_INFO")
                 put("basic.auth.user.info", "admin:admin")
             }
