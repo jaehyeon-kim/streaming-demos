@@ -2,12 +2,16 @@ package me.jaehyeon
 
 import mu.KotlinLogging
 import org.apache.avro.generic.GenericRecord
+import org.apache.kafka.clients.admin.AdminClient
+import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
 import java.time.Duration
 import java.util.Properties
+import kotlin.system.exitProcess
+import kotlin.use
 
 object ConsumerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
@@ -21,6 +25,9 @@ object ConsumerApp {
     private var keepConsuming = true
 
     fun run() {
+        // Verify kafka connection
+        verifyKafkaConnection()
+
         val props =
             Properties().apply {
                 put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
@@ -33,6 +40,8 @@ object ConsumerApp {
                 put("schema.registry.url", registryUrl)
                 put("basic.auth.credentials.source", "USER_INFO")
                 put("basic.auth.user.info", "admin:admin")
+                put(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, "5000")
+                put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
             }
 
         val consumer = KafkaConsumer<String, GenericRecord>(props)
@@ -45,15 +54,20 @@ object ConsumerApp {
             },
         )
 
-        consumer.use { c ->
-            c.subscribe(listOf(topicName))
-            while (keepConsuming) {
-                val records = pollSafely(c)
-                for (record in records) {
-                    processRecordWithRetry(record)
+        try {
+            consumer.use { c ->
+                c.subscribe(listOf(topicName))
+                while (keepConsuming) {
+                    val records = pollSafely(c)
+                    for (record in records) {
+                        processRecordWithRetry(record)
+                    }
+                    consumer.commitSync()
                 }
-                consumer.commitSync()
             }
+        } catch (e: Exception) {
+            logger.error(e.cause) { "Unrecoverable error while consuming record. Shutting down." }
+            exitProcess(1)
         }
     }
 
@@ -92,6 +106,25 @@ object ConsumerApp {
                     return
                 }
                 Thread.sleep(500L * attempt.toLong()) // exponential backoff
+            }
+        }
+    }
+
+    private fun verifyKafkaConnection() {
+        val props =
+            Properties().apply {
+                put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
+                put(AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, "5000")
+                put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
+                put(AdminClientConfig.RETRIES_CONFIG, "1")
+            }
+
+        AdminClient.create(props).use { client ->
+            try {
+                client.listTopics().names().get()
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to connect to Kafka at $bootstrapAddress" }
+                exitProcess(1)
             }
         }
     }

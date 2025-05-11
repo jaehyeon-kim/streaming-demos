@@ -9,12 +9,15 @@ import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.KafkaException
 import org.apache.kafka.common.errors.TopicExistsException
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 import java.util.UUID
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import kotlin.system.exitProcess
 
 object ProducerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
@@ -37,6 +40,10 @@ object ProducerApp {
                 put("schema.registry.url", registryUrl)
                 put("basic.auth.credentials.source", "USER_INFO")
                 put("basic.auth.user.info", "admin:admin")
+                put(ProducerConfig.RETRIES_CONFIG, "3")
+                put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
+                put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "6000")
+                put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "3000")
             }
 
         KafkaProducer<String, Order>(props).use { producer ->
@@ -50,15 +57,25 @@ object ProducerApp {
                         supplier = faker.regexify("(Alice|Bob|Carol|Alex|Joe|James|Jane|Jack)")
                     }
                 val record = ProducerRecord(inputTopicName, order.orderId, order)
-                producer.send(record) { metadata, exception ->
-                    if (exception != null) {
-                        logger.error(exception) { "Error sending record" }
-                    } else {
-                        logger.info {
-                            "Sent to ${metadata.topic()} into partition ${metadata.partition()}, offset ${metadata.offset()}"
-                        }
-                    }
+                try {
+                    producer
+                        .send(record) { metadata, exception ->
+                            if (exception != null) {
+                                logger.error(exception) { "Error sending record" }
+                            } else {
+                                logger.info {
+                                    "Sent to ${metadata.topic()} into partition ${metadata.partition()}, offset ${metadata.offset()}"
+                                }
+                            }
+                        }.get()
+                } catch (e: ExecutionException) {
+                    logger.error(e.cause) { "Unrecoverable error while sending record. Shutting down." }
+                    exitProcess(1)
+                } catch (e: KafkaException) {
+                    logger.error(e) { "Kafka error while sending record. Shutting down." }
+                    exitProcess(1)
                 }
+
                 Thread.sleep(1000L)
             }
         }
@@ -68,27 +85,32 @@ object ProducerApp {
         val props =
             Properties().apply {
                 put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
+                put(AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, "5000")
+                put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
+                put(AdminClientConfig.RETRIES_CONFIG, "1")
             }
 
         AdminClient.create(props).use { client ->
             val newTopic = NewTopic(topicName, NUM_PARTITIONS, REPLICATION_FACTOR)
             val result = client.createTopics(listOf(newTopic))
+
             try {
-                result.all().get() // wait to complete
+                logger.info { "Attempting to create topic '$topicName'..." }
+                result.all().get()
                 logger.info { "Topic '$topicName' created successfully!" }
-            } catch (e: Exception) {
+            } catch (e: ExecutionException) {
                 if (e.cause is TopicExistsException) {
-                    logger.warn { "Topic '$topicName' already exists. Skipping creation..." }
+                    logger.warn { "Topic '$inputTopicName' was created concurrently or already existed. Continuing..." }
                 } else {
-                    logger.error(e) { "Fails to create topic '$topicName': ${e.message}" }
-                    throw RuntimeException("Failed to create topic '$topicName'", e)
+                    logger.error(e.cause) { "Unrecoverable error while creating a topic. Shutting down." }
+                    exitProcess(1)
                 }
             }
         }
     }
 
     private fun generateBidTime(): String {
-        val randomDate = faker.date().past(5, TimeUnit.SECONDS)
+        val randomDate = faker.date().past(30, TimeUnit.SECONDS)
         val formatter =
             DateTimeFormatter
                 .ofPattern("yyyy-MM-dd HH:mm:ss")
