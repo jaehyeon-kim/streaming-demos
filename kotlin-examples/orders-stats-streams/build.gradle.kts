@@ -22,7 +22,7 @@ dependencies {
     implementation("io.confluent:kafka-streams-avro-serde:7.9.0")
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    implementation("ch.qos.logback:logback-classic:1.5.13")
     // Test
     testImplementation(kotlin("test"))
 }

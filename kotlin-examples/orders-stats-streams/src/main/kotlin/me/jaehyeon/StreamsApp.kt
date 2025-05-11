@@ -49,7 +49,7 @@ object StreamsApp {
 
         val props =
             Properties().apply {
-                put(StreamsConfig.APPLICATION_ID_CONFIG, "$outputTopicName-streams")
+                put(StreamsConfig.APPLICATION_ID_CONFIG, "$outputTopicName-kafka-streams")
                 put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
                 put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String()::class.java.name)
                 put(StreamsConfig.consumerPrefix(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG), "earliest")
