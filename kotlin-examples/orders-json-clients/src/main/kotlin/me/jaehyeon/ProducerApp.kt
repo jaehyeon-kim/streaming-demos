@@ -1,20 +1,19 @@
 package me.jaehyeon
 
+import me.jaehyeon.kafka.createTopicIfNotExists
 import me.jaehyeon.model.Order
 import me.jaehyeon.serializer.JsonSerializer
 import mu.KotlinLogging
 import net.datafaker.Faker
-import org.apache.kafka.clients.admin.AdminClient
-import org.apache.kafka.clients.admin.AdminClientConfig
-import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.errors.TopicExistsException
+import org.apache.kafka.common.KafkaException
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 import java.util.UUID
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 object ProducerApp {
@@ -26,14 +25,18 @@ object ProducerApp {
     private val faker = Faker()
 
     fun run() {
-        // create the input topic if not existing
-        createTopicIfNotExists(inputTopicName)
+        // Create the input topic if not existing
+        createTopicIfNotExists(inputTopicName, bootstrapAddress, NUM_PARTITIONS, REPLICATION_FACTOR)
 
         val props =
             Properties().apply {
                 put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
                 put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer")
                 put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer::class.java.name)
+                put(ProducerConfig.RETRIES_CONFIG, "3")
+                put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
+                put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "6000")
+                put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "3000")
             }
 
         KafkaProducer<String, Order>(props).use { producer ->
@@ -47,39 +50,24 @@ object ProducerApp {
                         faker.regexify("(Alice|Bob|Carol|Alex|Joe|James|Jane|Jack)"),
                     )
                 val record = ProducerRecord(inputTopicName, order.orderId, order)
-                producer.send(record) { metadata, exception ->
-                    if (exception != null) {
-                        logger.error(exception) { "Error sending record" }
-                    } else {
-                        logger.info {
-                            "Sent to ${metadata.topic()} into partition ${metadata.partition()}, offset ${metadata.offset()}"
-                        }
-                    }
+                try {
+                    producer
+                        .send(record) { metadata, exception ->
+                            if (exception != null) {
+                                logger.error(exception) { "Error sending record" }
+                            } else {
+                                logger.info {
+                                    "Sent to ${metadata.topic()} into partition ${metadata.partition()}, offset ${metadata.offset()}"
+                                }
+                            }
+                        }.get()
+                } catch (e: ExecutionException) {
+                    throw RuntimeException("Unrecoverable error while sending record.", e)
+                } catch (e: KafkaException) {
+                    throw RuntimeException("Kafka error while sending record.", e)
                 }
+
                 Thread.sleep(1000L)
-            }
-        }
-    }
-
-    private fun createTopicIfNotExists(topicName: String) {
-        val props =
-            Properties().apply {
-                put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
-            }
-
-        AdminClient.create(props).use { client ->
-            val newTopic = NewTopic(topicName, NUM_PARTITIONS, REPLICATION_FACTOR)
-            val result = client.createTopics(listOf(newTopic))
-            try {
-                result.all().get() // wait to complete
-                logger.info { "Topic '$topicName' created successfully!" }
-            } catch (e: Exception) {
-                if (e.cause is TopicExistsException) {
-                    logger.warn { "Topic '$topicName' already exists. Skipping creation..." }
-                } else {
-                    logger.error(e) { "Fails to create topic '$topicName': ${e.message}" }
-                    throw RuntimeException("Failed to create topic '$topicName'", e)
-                }
             }
         }
     }

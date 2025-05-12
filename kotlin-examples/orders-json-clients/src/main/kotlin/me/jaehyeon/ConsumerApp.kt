@@ -1,5 +1,6 @@
 package me.jaehyeon
 
+import me.jaehyeon.kafka.verifyKafkaConnection
 import me.jaehyeon.model.Order
 import me.jaehyeon.serializer.JsonDeserializer
 import mu.KotlinLogging
@@ -22,6 +23,9 @@ object ConsumerApp {
     private var keepConsuming = true
 
     fun run() {
+        // Verify kafka connection
+        verifyKafkaConnection(bootstrapAddress)
+
         val props =
             Properties().apply {
                 put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
@@ -30,6 +34,8 @@ object ConsumerApp {
                 put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, Order::class.java.name)
                 put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
                 put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+                put(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, "5000")
+                put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
             }
 
         val consumer =
@@ -47,15 +53,19 @@ object ConsumerApp {
             },
         )
 
-        consumer.use { c ->
-            c.subscribe(listOf(topicName))
-            while (keepConsuming) {
-                val records = pollSafely(c)
-                for (record in records) {
-                    processRecordWithRetry(record)
+        try {
+            consumer.use { c ->
+                c.subscribe(listOf(topicName))
+                while (keepConsuming) {
+                    val records = pollSafely(c)
+                    for (record in records) {
+                        processRecordWithRetry(record)
+                    }
+                    consumer.commitSync()
                 }
-                consumer.commitSync()
             }
+        } catch (e: Exception) {
+            RuntimeException("Unrecoverable error while consuming record.", e)
         }
     }
 
