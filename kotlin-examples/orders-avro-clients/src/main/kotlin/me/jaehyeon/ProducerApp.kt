@@ -1,23 +1,19 @@
 package me.jaehyeon
 
 import me.jaehyeon.avro.Order
+import me.jaehyeon.kafka.createTopicIfNotExists
 import mu.KotlinLogging
 import net.datafaker.Faker
-import org.apache.kafka.clients.admin.AdminClient
-import org.apache.kafka.clients.admin.AdminClientConfig
-import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException
-import org.apache.kafka.common.errors.TopicExistsException
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 import java.util.UUID
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
-import kotlin.system.exitProcess
 
 object ProducerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
@@ -29,8 +25,8 @@ object ProducerApp {
     private val faker = Faker()
 
     fun run() {
-        // create the input topic if not existing
-        createTopicIfNotExists(inputTopicName)
+        // Create the input topic if not existing
+        createTopicIfNotExists(inputTopicName, bootstrapAddress, NUM_PARTITIONS, REPLICATION_FACTOR)
 
         val props =
             Properties().apply {
@@ -69,42 +65,12 @@ object ProducerApp {
                             }
                         }.get()
                 } catch (e: ExecutionException) {
-                    logger.error(e.cause) { "Unrecoverable error while sending record. Shutting down." }
-                    exitProcess(1)
+                    throw RuntimeException("Unrecoverable error while sending record.", e)
                 } catch (e: KafkaException) {
-                    logger.error(e) { "Kafka error while sending record. Shutting down." }
-                    exitProcess(1)
+                    throw RuntimeException("Kafka error while sending record.", e)
                 }
 
                 Thread.sleep(1000L)
-            }
-        }
-    }
-
-    private fun createTopicIfNotExists(topicName: String) {
-        val props =
-            Properties().apply {
-                put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
-                put(AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, "5000")
-                put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
-                put(AdminClientConfig.RETRIES_CONFIG, "1")
-            }
-
-        AdminClient.create(props).use { client ->
-            val newTopic = NewTopic(topicName, NUM_PARTITIONS, REPLICATION_FACTOR)
-            val result = client.createTopics(listOf(newTopic))
-
-            try {
-                logger.info { "Attempting to create topic '$topicName'..." }
-                result.all().get()
-                logger.info { "Topic '$topicName' created successfully!" }
-            } catch (e: ExecutionException) {
-                if (e.cause is TopicExistsException) {
-                    logger.warn { "Topic '$inputTopicName' was created concurrently or already existed. Continuing..." }
-                } else {
-                    logger.error(e.cause) { "Unrecoverable error while creating a topic. Shutting down." }
-                    exitProcess(1)
-                }
             }
         }
     }

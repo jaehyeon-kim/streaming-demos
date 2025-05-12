@@ -1,16 +1,14 @@
 package me.jaehyeon
 
+import me.jaehyeon.kafka.verifyKafkaConnection
 import mu.KotlinLogging
 import org.apache.avro.generic.GenericRecord
-import org.apache.kafka.clients.admin.AdminClient
-import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
 import java.time.Duration
 import java.util.Properties
-import kotlin.system.exitProcess
 import kotlin.use
 
 object ConsumerApp {
@@ -26,7 +24,7 @@ object ConsumerApp {
 
     fun run() {
         // Verify kafka connection
-        verifyKafkaConnection()
+        verifyKafkaConnection(bootstrapAddress)
 
         val props =
             Properties().apply {
@@ -66,8 +64,7 @@ object ConsumerApp {
                 }
             }
         } catch (e: Exception) {
-            logger.error(e.cause) { "Unrecoverable error while consuming record. Shutting down." }
-            exitProcess(1)
+            RuntimeException("Unrecoverable error while consuming record.", e)
         }
     }
 
@@ -106,25 +103,6 @@ object ConsumerApp {
                     return
                 }
                 Thread.sleep(500L * attempt.toLong()) // exponential backoff
-            }
-        }
-    }
-
-    private fun verifyKafkaConnection() {
-        val props =
-            Properties().apply {
-                put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
-                put(AdminClientConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, "5000")
-                put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, "3000")
-                put(AdminClientConfig.RETRIES_CONFIG, "1")
-            }
-
-        AdminClient.create(props).use { client ->
-            try {
-                client.listTopics().names().get()
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to connect to Kafka at $bootstrapAddress" }
-                exitProcess(1)
             }
         }
     }
