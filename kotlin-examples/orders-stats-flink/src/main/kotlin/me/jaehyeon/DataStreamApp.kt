@@ -69,7 +69,7 @@ object DataStreamApp {
                 bootstrapAddress = bootstrapAddress,
                 registryUrl = registryUrl,
                 registryConfig = registryConfig,
-                schema = inputAvroSchema, // This is the Avro schema for deserialization
+                schema = inputAvroSchema,
             )
 
         // 1. Stream of GenericRecords from Kafka
