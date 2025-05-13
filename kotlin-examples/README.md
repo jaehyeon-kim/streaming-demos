@@ -46,7 +46,7 @@ Example Kafka and Flink applications using Kotlin.
 
 - [Supplier Stats Using Kafka Streams](./orders-stats-streams/)
 
-  - Kafka Streams application that processes Avro-formatted order records, calculating windowed supplier statistics for on-time events while identifying, marking, and routing late records as JSON to a separate "skipped" topic.
+  - Kafka Streams application that calculates supplier statistics for on-time events while routing late records to a separate "skipped" topic.
 
   ```
    👉 With Gradle (Dev Mode)
@@ -60,6 +60,29 @@ Example Kafka and Flink applications using Kotlin.
 
    👉 Run the Fat JAR:
    java -jar build/libs/orders-stats-streams-1.0.jar
+  ```
+
+- [Supplier Stats Using Flink](./orders-stats-flink/)
+
+  - Flink applications that calculate supplier statistics for on-time events while routing late records to a separate "skipped" topic.
+
+  ```
+   👉 With Gradle (Dev Mode)
+   ./gradlew run
+
+   👉 Build Shadow (Fat) JAR:
+   ./gradlew shadowJar
+
+   # Resulting JAR:
+   # build/libs/orders-stats-flink-1.0.jar
+
+   👉 Run the Fat JAR:
+   TO_SKIP_PRINT=false \
+    java --add-opens=java.base/java.util=ALL-UNNAMED \
+      -jar build/libs/orders-stats-flink-1.0.jar datastream
+   TO_SKIP_PRINT=false \
+    java --add-opens=java.base/java.util=ALL-UNNAMED \
+      -jar build/libs/orders-stats-flink-1.0.jar table
   ```
 
 ### Troubleshoot
