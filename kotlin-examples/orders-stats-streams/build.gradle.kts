@@ -20,6 +20,8 @@ dependencies {
     // AVRO
     implementation("org.apache.avro:avro:1.11.4")
     implementation("io.confluent:kafka-streams-avro-serde:7.9.0")
+    // Json
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.5.13")

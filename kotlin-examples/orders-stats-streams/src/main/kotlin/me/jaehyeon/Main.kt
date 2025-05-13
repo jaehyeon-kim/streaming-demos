@@ -1,5 +1,15 @@
 package me.jaehyeon
 
+import mu.KotlinLogging
+import kotlin.system.exitProcess
+
+private val logger = KotlinLogging.logger {}
+
 fun main() {
-    StreamsApp.run()
+    try {
+        StreamsApp.run()
+    } catch (e: Exception) {
+        logger.error(e) { "Fatal error in the streams app. Shutting down." }
+        exitProcess(1)
+    }
 }

@@ -1,17 +1,16 @@
 package me.jaehyeon
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.confluent.kafka.streams.serdes.avro.GenericAvroSerde
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import me.jaehyeon.avro.SupplierStats
+import me.jaehyeon.kafka.createTopicIfNotExists
 import me.jaehyeon.streams.extractor.BidTimeTimestampExtractor
 import me.jaehyeon.streams.processor.LateRecordProcessor
 import mu.KotlinLogging
 import org.apache.avro.generic.GenericRecord
-import org.apache.kafka.clients.admin.AdminClient
-import org.apache.kafka.clients.admin.AdminClientConfig
-import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.errors.TopicExistsException
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.KeyValue
@@ -35,16 +34,34 @@ object StreamsApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
     private val inputTopicName = System.getenv("TOPIC") ?: "orders-avro"
     private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
+    private val registryConfig =
+        mapOf(
+            "schema.registry.url" to registryUrl,
+            "basic.auth.credentials.source" to "USER_INFO",
+            "basic.auth.user.info" to "admin:admin",
+        )
+    private val windowSize = Duration.ofSeconds(5)
+    private val gradePeriod = Duration.ofSeconds(5)
     private const val NUM_PARTITIONS = 3
     private const val REPLICATION_FACTOR: Short = 3
     private val logger = KotlinLogging.logger {}
 
+    // ObjectMapper for converting late source to JSON
+    private val objectMapper: ObjectMapper by lazy {
+        ObjectMapper().registerKotlinModule()
+    }
+
     fun run() {
-        // create output topics if not existing
+        // Create output topics if not existing
         val outputTopicName = "$inputTopicName-stats"
-        val skippedTopicName = "$outputTopicName-skipped"
+        val skippedTopicName = "$inputTopicName-skipped"
         listOf(outputTopicName, skippedTopicName).forEach { name ->
-            createTopicIfNotExists(name)
+            createTopicIfNotExists(
+                name,
+                bootstrapAddress,
+                NUM_PARTITIONS,
+                REPLICATION_FACTOR,
+            )
         }
 
         val props =
@@ -62,32 +79,15 @@ object StreamsApp {
         val keySerde = Serdes.String()
         val valueSerde =
             GenericAvroSerde().apply {
-                configure(
-                    mapOf(
-                        "schema.registry.url" to registryUrl,
-                        "basic.auth.credentials.source" to "USER_INFO",
-                        "basic.auth.user.info" to "admin:admin",
-                    ),
-                    false,
-                )
+                configure(registryConfig, false)
             }
         val supplierStatsSerde =
             SpecificAvroSerde<SupplierStats>().apply {
-                configure(
-                    mapOf(
-                        "schema.registry.url" to registryUrl,
-                        "basic.auth.credentials.source" to "USER_INFO",
-                        "basic.auth.user.info" to "admin:admin",
-                    ),
-                    false,
-                )
+                configure(registryConfig, false)
             }
 
         val builder = StreamsBuilder()
         val source: KStream<String, GenericRecord> = builder.stream(inputTopicName, Consumed.with(keySerde, valueSerde))
-
-        val windowSize = Duration.ofSeconds(5)
-        val gradePeriod = Duration.ZERO
 
         val taggedStream: KStream<String, Pair<GenericRecord, Boolean>> =
             source.process(
@@ -100,8 +100,8 @@ object StreamsApp {
         val branches: Map<String, KStream<String, Pair<GenericRecord, Boolean>>> =
             taggedStream
                 .split(Named.`as`("branch-"))
-                .branch({ _, value -> !value.second }, Branched.`as`("valid")) // Not late: value.second is false
-                .branch({ _, value -> value.second }, Branched.`as`("late")) // Late: value.second is true
+                .branch({ _, value -> !value.second }, Branched.`as`("valid"))
+                .branch({ _, value -> value.second }, Branched.`as`("late"))
                 .noDefaultBranch()
 
         val validSource: KStream<String, GenericRecord> =
@@ -113,9 +113,19 @@ object StreamsApp {
                 .mapValues { _, pair -> pair.first }
 
         lateSource
-            .peek { key, value ->
-                logger.warn { "Routing potentially late record to $skippedTopicName: key=$key, bid_time=${value["bid_time"]}" }
-            }.to(skippedTopicName, Produced.with(keySerde, valueSerde))
+            .mapValues { _, genericRecord ->
+                val map = mutableMapOf<String, Any?>()
+                genericRecord.schema.fields.forEach { field ->
+                    val value = genericRecord.get(field.name())
+                    map[field.name()] = if (value is org.apache.avro.util.Utf8) value.toString() else value
+                }
+                map["late"] = true
+                map
+            }.peek { key, mapValue ->
+                logger.warn { "Potentially late record - key=$key, value=$mapValue" }
+            }.mapValues { _, mapValue ->
+                objectMapper.writeValueAsString(mapValue)
+            }.to(skippedTopicName, Produced.with(keySerde, Serdes.String()))
 
         val aggregated: KTable<Windowed<String>, SupplierStats> =
             validSource
@@ -160,13 +170,10 @@ object StreamsApp {
                         .build()
                 KeyValue(key.key(), updatedValue)
             }.peek { _, value ->
-                logger.info {
-                    "Window Start: ${value.windowStart}, Window End: ${value.windowEnd}, Supplier: ${value.supplier}, Total Price: ${value.totalPrice}, Count: ${value.count}"
-                }
+                logger.info { "Supplier Stats: $value" }
             }.to(outputTopicName, Produced.with(keySerde, supplierStatsSerde))
 
         val streams = KafkaStreams(builder.build(), props)
-
         try {
             streams.start()
             logger.info { "Kafka Streams started successfully." }
@@ -178,32 +185,8 @@ object StreamsApp {
                 },
             )
         } catch (e: Exception) {
-            logger.error(e) { "Error while running Kafka Streams" }
             streams.close(Duration.ofSeconds(5))
-            throw e
-        }
-    }
-
-    private fun createTopicIfNotExists(topicName: String) {
-        val props =
-            Properties().apply {
-                put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress)
-            }
-
-        AdminClient.create(props).use { client ->
-            val newTopic = NewTopic(topicName, NUM_PARTITIONS, REPLICATION_FACTOR)
-            val result = client.createTopics(listOf(newTopic))
-            try {
-                result.all().get() // wait to complete
-                logger.info { "Topic '$topicName' created successfully!" }
-            } catch (e: Exception) {
-                if (e.cause is TopicExistsException) {
-                    logger.warn { "Topic '$topicName' already exists. Skipping creation..." }
-                } else {
-                    logger.error(e) { "Fails to create topic '$topicName': ${e.message}" }
-                    throw RuntimeException("Failed to create topic '$topicName'", e)
-                }
-            }
+            throw RuntimeException("Error while running Kafka Streams", e)
         }
     }
 }

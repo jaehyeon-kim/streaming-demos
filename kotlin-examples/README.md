@@ -44,6 +44,24 @@ Example Kafka and Flink applications using Kotlin.
    java -jar build/libs/kafka-avro-clients-1.0.jar consumer
   ```
 
+- [Supplier Stats Using Kafka Streams](./orders-stats-streams/)
+
+  - Kafka Streams application that processes Avro-formatted order records, calculating windowed supplier statistics for on-time events while identifying, marking, and routing late records as JSON to a separate "skipped" topic.
+
+  ```
+   👉 With Gradle (Dev Mode)
+   ./gradlew run
+
+   👉 Build Shadow (Fat) JAR:
+   ./gradlew shadowJar
+
+   # Resulting JAR:
+   # build/libs/orders-stats-streams-1.0.jar
+
+   👉 Run the Fat JAR:
+   java -jar build/libs/orders-stats-streams-1.0.jar
+  ```
+
 ### Troubleshoot
 
 - `Unresolved reference 'avro'`
