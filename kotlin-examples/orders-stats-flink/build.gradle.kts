@@ -43,11 +43,7 @@ application {
     mainClass.set("me.jaehyeon.MainKt")
     applicationDefaultJvmArgs =
         listOf(
-            "--add-opens=java.base/java.time.format=ALL-UNNAMED",
-            // You might need others if more issues arise, e.g.:
-            "--add-opens=java.base/java.lang=ALL-UNNAMED",
-            "--add-opens=java.base/java.nio=ALL-UNNAMED",
-            "--add-opens=java.base/java.util=ALL-UNNAMED", // Keep if other parts need it
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
         )
 }
 
