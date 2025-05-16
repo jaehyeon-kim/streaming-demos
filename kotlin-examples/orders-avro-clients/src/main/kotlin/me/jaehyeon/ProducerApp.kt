@@ -19,6 +19,7 @@ object ProducerApp {
     private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
     private val inputTopicName = System.getenv("TOPIC_NAME") ?: "orders-avro"
     private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
+    private val delaySeconds = System.getenv("DELAY_SECONDS")?.toIntOrNull() ?: 5
     private const val NUM_PARTITIONS = 3
     private const val REPLICATION_FACTOR: Short = 3
     private val logger = KotlinLogging.logger {}
@@ -76,7 +77,7 @@ object ProducerApp {
     }
 
     private fun generateBidTime(): String {
-        val randomDate = faker.date().past(30, TimeUnit.SECONDS)
+        val randomDate = faker.date().past(delaySeconds, TimeUnit.SECONDS)
         val formatter =
             DateTimeFormatter
                 .ofPattern("yyyy-MM-dd HH:mm:ss")
