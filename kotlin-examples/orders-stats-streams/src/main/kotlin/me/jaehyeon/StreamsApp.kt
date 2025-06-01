@@ -31,9 +31,9 @@ import java.time.Duration
 import java.util.Properties
 
 object StreamsApp {
-    private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
+    private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "kafka-1:19092"
     private val inputTopicName = System.getenv("TOPIC") ?: "orders-avro"
-    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
+    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://schema:8081"
     private val registryConfig =
         mapOf(
             "schema.registry.url" to registryUrl,
@@ -41,7 +41,7 @@ object StreamsApp {
             "basic.auth.user.info" to "admin:admin",
         )
     private val windowSize = Duration.ofSeconds(5)
-    private val gradePeriod = Duration.ofSeconds(5)
+    private val gracePeriod = Duration.ofSeconds(5)
     private const val NUM_PARTITIONS = 3
     private const val REPLICATION_FACTOR: Short = 3
     private val logger = KotlinLogging.logger {}
@@ -92,7 +92,7 @@ object StreamsApp {
         val taggedStream: KStream<String, Pair<GenericRecord, Boolean>> =
             source.process(
                 ProcessorSupplier {
-                    LateRecordProcessor(windowSize, gradePeriod)
+                    LateRecordProcessor(windowSize, gracePeriod)
                 },
                 Named.`as`("process-late-records"),
             )
@@ -134,7 +134,7 @@ object StreamsApp {
                     val price = value["price"] as? Double ?: 0.0
                     KeyValue(supplier, price)
                 }.groupByKey(Grouped.with(keySerde, Serdes.Double()))
-                .windowedBy(TimeWindows.ofSizeAndGrace(windowSize, gradePeriod))
+                .windowedBy(TimeWindows.ofSizeAndGrace(windowSize, gracePeriod))
                 .aggregate(
                     {
                         SupplierStats
