@@ -74,6 +74,12 @@ tasks.named("build") {
     dependsOn("shadowJar")
 }
 
+tasks.named<JavaExec>("run") {
+    environment("TO_SKIP_PRINT", "false")
+    environment("BOOTSTRAP", "localhost:9092")
+    environment("REGISTRY_URL", "http://localhost:8081")
+}
+
 tasks.test {
     useJUnitPlatform()
 }

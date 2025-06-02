@@ -24,6 +24,7 @@ import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.connectors.kafka.table.KafkaConnectorOptions
 import org.apache.flink.table.api.DataTypes
 import org.apache.flink.table.api.Expressions.*
+import org.apache.flink.table.api.Expressions.lit
 import org.apache.flink.table.api.FormatDescriptor
 import org.apache.flink.table.api.Schema
 import org.apache.flink.table.api.Table
@@ -41,16 +42,15 @@ import java.time.format.DateTimeParseException
 
 object TableApp {
     private val toSkipPrint = System.getenv("TO_SKIP_PRINT")?.toBoolean() ?: true
-    private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
+    private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "kafka-1:19092"
     private val inputTopicName = System.getenv("TOPIC") ?: "orders-avro"
-    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
+    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://schema:8081"
     private val registryConfig =
         mapOf(
             "basic.auth.credentials.source" to "USER_INFO",
             "basic.auth.user.info" to "admin:admin",
         )
     private const val INPUT_SCHEMA_SUBJECT = "orders-avro-value"
-    private const val OUTPUT_SCHEMA_SUBJECT = "orders-avro-stats"
     private const val NUM_PARTITIONS = 3
     private const val REPLICATION_FACTOR: Short = 3
     private val logger = KotlinLogging.logger {}
@@ -62,8 +62,8 @@ object TableApp {
 
     fun run() {
         // Create output topics if not existing
-        val outputTopicName = "$inputTopicName-stats"
-        val skippedTopicName = "$inputTopicName-skipped"
+        val outputTopicName = "$inputTopicName-ktl-stats"
+        val skippedTopicName = "$inputTopicName-ktl-skipped"
         listOf(outputTopicName, skippedTopicName).forEach { name ->
             createTopicIfNotExists(
                 name,
@@ -81,7 +81,7 @@ object TableApp {
         val ordersGenericRecordSource =
             createOrdersSource(
                 topic = inputTopicName,
-                groupId = "$inputTopicName-flink-datastream",
+                groupId = "$inputTopicName-flink-tl",
                 bootstrapAddress = bootstrapAddress,
                 registryUrl = registryUrl,
                 registryConfig = registryConfig,
@@ -153,7 +153,7 @@ object TableApp {
 
                     Row.of(
                         orderId,
-                        bidTimeInstant, // <<<<<< Now passing an Instant? object
+                        bidTimeInstant,
                         price,
                         item,
                         supplier,
@@ -182,6 +182,7 @@ object TableApp {
                 .watermark("bid_time", "SOURCE_WATERMARK()") // Use watermarks from DataStream
                 .build()
         tEnv.createTemporaryView("orders", rowStatsStream, tableSchema)
+
         val statsTable: Table =
             tEnv
                 .from("orders")
@@ -189,10 +190,10 @@ object TableApp {
                 .groupBy(col("supplier"), col("w"))
                 .select(
                     col("supplier"),
-                    col("w").start().`as`("window_start"), // TIMESTAMP(3)
-                    col("w").end().`as`("window_end"), // TIMESTAMP(3)
-                    col("price").sum().round(2).`as`("total_price"), // DOUBLE
-                    col("order_id").count().`as`("count"), // BIGINT
+                    col("w").start().`as`("window_start"),
+                    col("w").end().`as`("window_end"),
+                    col("price").sum().round(2).`as`("total_price"),
+                    col("order_id").count().`as`("count"),
                 )
 
         // 6. Create sink table
@@ -217,7 +218,7 @@ object TableApp {
                         .option("url", registryUrl)
                         .option("basic-auth.credentials-source", "USER_INFO")
                         .option("basic-auth.user-info", "admin:admin")
-                        .option("subject", OUTPUT_SCHEMA_SUBJECT)
+                        .option("subject", "$outputTopicName-value")
                         .build(),
                 ).build()
 

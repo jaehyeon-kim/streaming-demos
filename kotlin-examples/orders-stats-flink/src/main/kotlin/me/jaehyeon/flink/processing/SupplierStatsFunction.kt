@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter
 class SupplierStatsFunction : WindowFunction<SupplierStatsAccumulator, SupplierStats, String, TimeWindow> {
     companion object {
         private val formatter: DateTimeFormatter =
-            DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.systemDefault())
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
     }
 
     override fun apply(

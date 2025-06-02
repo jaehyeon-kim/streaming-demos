@@ -26,9 +26,9 @@ import java.time.Duration
 
 object DataStreamApp {
     private val toSkipPrint = System.getenv("TO_SKIP_PRINT")?.toBoolean() ?: true
-    private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "localhost:9092"
+    private val bootstrapAddress = System.getenv("BOOTSTRAP") ?: "kafka-1:19092"
     private val inputTopicName = System.getenv("TOPIC") ?: "orders-avro"
-    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://localhost:8081"
+    private val registryUrl = System.getenv("REGISTRY_URL") ?: "http://schema:8081"
     private val registryConfig =
         mapOf(
             "basic.auth.credentials.source" to "USER_INFO",
@@ -47,8 +47,8 @@ object DataStreamApp {
 
     fun run() {
         // Create output topics if not existing
-        val outputTopicName = "$inputTopicName-stats"
-        val skippedTopicName = "$inputTopicName-skipped"
+        val outputTopicName = "$inputTopicName-kds-stats"
+        val skippedTopicName = "$inputTopicName-kds-skipped"
         listOf(outputTopicName, skippedTopicName).forEach { name ->
             createTopicIfNotExists(
                 name,
@@ -65,7 +65,7 @@ object DataStreamApp {
         val ordersGenericRecordSource =
             createOrdersSource(
                 topic = inputTopicName,
-                groupId = "$inputTopicName-flink-datastream",
+                groupId = "$inputTopicName-flink-ds",
                 bootstrapAddress = bootstrapAddress,
                 registryUrl = registryUrl,
                 registryConfig = registryConfig,
@@ -145,7 +145,7 @@ object DataStreamApp {
                 bootstrapAddress = bootstrapAddress,
                 registryUrl = registryUrl,
                 registryConfig = registryConfig,
-                outputSubject = OUTPUT_SCHEMA_SUBJECT,
+                outputSubject = "$outputTopicName-value",
             )
 
         val skippedSink =
