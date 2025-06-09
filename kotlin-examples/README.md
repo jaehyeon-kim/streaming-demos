@@ -68,7 +68,8 @@ Example Kafka and Flink applications using Kotlin.
 
   ```
    👉 With Gradle (Dev Mode)
-   ./gradlew run
+   ./gradlew run --args="datastream"
+   ./gradlew run --args="table"
 
    👉 Build Shadow (Fat) JAR:
    ./gradlew shadowJar
@@ -77,10 +78,8 @@ Example Kafka and Flink applications using Kotlin.
    # build/libs/orders-stats-flink-1.0.jar
 
    👉 Run the Fat JAR:
-   TO_SKIP_PRINT=false \
     java --add-opens=java.base/java.util=ALL-UNNAMED \
       -jar build/libs/orders-stats-flink-1.0.jar datastream
-   TO_SKIP_PRINT=false \
     java --add-opens=java.base/java.util=ALL-UNNAMED \
       -jar build/libs/orders-stats-flink-1.0.jar table
   ```

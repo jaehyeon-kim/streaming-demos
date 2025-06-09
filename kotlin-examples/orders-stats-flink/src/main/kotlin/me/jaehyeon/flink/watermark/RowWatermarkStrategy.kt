@@ -5,11 +5,11 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.types.Row
 
 object RowWatermarkStrategy {
-    private val logger = KotlinLogging.logger {} // Ensure logger is available
+    private val logger = KotlinLogging.logger {}
 
     val strategy: WatermarkStrategy<Row> =
         WatermarkStrategy
-            .forBoundedOutOfOrderness<Row>(java.time.Duration.ofSeconds(5)) // Same lateness
+            .forBoundedOutOfOrderness<Row>(java.time.Duration.ofSeconds(5))
             .withTimestampAssigner { row: Row, _ ->
                 try {
                     // Get the field by index. Assumes bid_time is at index 1 and is Long.

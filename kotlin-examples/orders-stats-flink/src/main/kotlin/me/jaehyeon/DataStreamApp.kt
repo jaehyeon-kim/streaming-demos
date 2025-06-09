@@ -35,7 +35,6 @@ object DataStreamApp {
             "basic.auth.user.info" to "admin:admin",
         )
     private const val INPUT_SCHEMA_SUBJECT = "orders-avro-value"
-    private const val OUTPUT_SCHEMA_SUBJECT = "orders-avro-stats"
     private const val NUM_PARTITIONS = 3
     private const val REPLICATION_FACTOR: Short = 3
     private val logger = KotlinLogging.logger {}

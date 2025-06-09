@@ -4,6 +4,7 @@ package me.jaehyeon
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import me.jaehyeon.flink.processing.LateDataRouter
 import me.jaehyeon.flink.processing.RecordMap
 import me.jaehyeon.flink.watermark.RowWatermarkStrategy
 import me.jaehyeon.flink.watermark.SupplierWatermarkStrategy
@@ -20,7 +21,6 @@ import org.apache.flink.api.java.typeutils.RowTypeInfo
 import org.apache.flink.streaming.api.datastream.DataStream
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
-import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.connectors.kafka.table.KafkaConnectorOptions
 import org.apache.flink.table.api.DataTypes
 import org.apache.flink.table.api.Expressions.*
@@ -32,7 +32,6 @@ import org.apache.flink.table.api.TableDescriptor
 import org.apache.flink.table.api.Tumble
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment
 import org.apache.flink.types.Row
-import org.apache.flink.util.Collector
 import org.apache.flink.util.OutputTag
 import java.time.Instant
 import java.time.LocalDateTime
@@ -262,41 +261,5 @@ object TableApp {
         statsTable.executeInsert(kafkaSinkDescriptor)
         lateKeyPairStream.sinkTo(skippedSink).name("LateDataSink")
         env.execute("SupplierStats")
-    }
-}
-
-class LateDataRouter(
-    private val lateOutputTag: OutputTag<RecordMap>,
-    private val allowedLatenessMillis: Long,
-) : ProcessFunction<RecordMap, RecordMap>() { // Extends the generic ProcessFunction from streaming API
-
-    init {
-        require(allowedLatenessMillis >= 0) {
-            "allowedLatenessMillis cannot be negative. Got: $allowedLatenessMillis"
-        }
-    }
-
-    @Throws(Exception::class)
-    override fun processElement(
-        value: RecordMap,
-        ctx: ProcessFunction<RecordMap, RecordMap>.Context,
-        out: Collector<RecordMap>,
-    ) {
-        val elementTimestamp: Long? = ctx.timestamp()
-        val currentWatermark: Long = ctx.timerService().currentWatermark()
-
-        // Element has no timestamp or watermark is still at its initial value
-        if (elementTimestamp == null || currentWatermark == Long.MIN_VALUE) {
-            out.collect(value)
-            return
-        }
-
-        // Element has a timestamp and watermark is active.
-        // An element is "too late" if its timestamp is older than current watermark - allowed lateness.
-        if (elementTimestamp < currentWatermark - allowedLatenessMillis) {
-            ctx.output(lateOutputTag, value)
-        } else {
-            out.collect(value)
-        }
     }
 }

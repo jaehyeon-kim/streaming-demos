@@ -11,5 +11,5 @@
     </appender>
 
     <!-- Optional: Override log level for your package -->
-    <logger name="me.jaehyeon" level="DEBUG" />
+    <logger name="me.jaehyeon" level="INFO" />
 </configuration>
