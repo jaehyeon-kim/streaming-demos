@@ -8,4 +8,9 @@
   - [Part 2 Streamlit Dashboard](https://jaehyeon.me/blog/2025-02-25-realtime-dashboard-2/)
   - [Part 3 Nest.js Dashboard](https://jaehyeon.me/blog/2025-03-04-realtime-dashboard-3/)
 - **Getting Started with Kafka and Flink with Kotlin**
-  - [kotlin-examples](./kotlin-examples/)
+  - This five-part series walks through the evolution of an event-driven data pipeline, starting with basic Kafka clients and progressing to advanced real-time stream processing and analytics using Kafka Streams and Apache Flink. All implemented in Kotlin and centered around order events.
+  - [Kafka Clients With JSON - Producing and Consuming Order Events](https://jaehyeon.me/blog/2025-05-20-kotlin-getting-started-kafka-json-clients/)
+  - [Kafka Clients With Avro - Schema Registry and Order Events](https://jaehyeon.me/blog/2025-05-27-kotlin-getting-started-kafka-avro-clients/)
+  - [Kafka Streams - Lightweight Real-Time Processing for Supplier Stats](https://jaehyeon.me/blog/2025-06-03-kotlin-getting-started-kafka-streams/)
+  - [Flink DataStream API - Scalable Event Processing for Supplier Stats](https://jaehyeon.me/blog/2025-06-10-kotlin-getting-started-flink-datastream/)
+  - [Flink Table API - Declarative Analytics for Supplier Stats in Real Time](https://jaehyeon.me/blog/2025-06-17-kotlin-getting-started-flink-table/)
