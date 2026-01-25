@@ -9,5 +9,7 @@
     "editor.tabSize": 4,
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "charliermarsh.ruff"
-  }
+  },
+  "python.terminal.activateEnvironment": false,
+  "terminal.integrated.suggest.enabled": false
 }
