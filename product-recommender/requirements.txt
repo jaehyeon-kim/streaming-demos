@@ -1,0 +1,7 @@
+faker
+scikit-learn>=0.24.0
+pandas>=1.1.0,<2.0.0
+numpy>=1.20.2,<2.0.0
+textwiser>=2.0.0
+mabwiser>=2.7.4
+mab2rec>=1.3.0
