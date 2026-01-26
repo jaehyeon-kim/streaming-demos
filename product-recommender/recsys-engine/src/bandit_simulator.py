@@ -58,10 +58,7 @@ class GroundTruth:
         score = -2.5  # Base Logit
 
         # Rule 1: Morning Coffee
-        if (
-            user_ctx.get("is_morning") == 1
-            and item_ctx.get("cat_Drinks & Desserts") == 1
-        ):
+        if user_ctx.get("is_morning") == 1 and item_ctx.get("is_coffee") == 1:
             score += 2.5
 
         # Rule 2: Weekend Comfort Food

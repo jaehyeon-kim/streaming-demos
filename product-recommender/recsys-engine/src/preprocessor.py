@@ -108,6 +108,11 @@ class Preprocessor:
         cat_cols = ["category"]
         cat_df = pd.get_dummies(df[cat_cols], prefix="cat", dtype=int)
 
+        # Create Binary 'is_coffee' Feature
+        # Based on specific IDs: 189, 190, 191, 192, 193, 194
+        coffee_ids = [189, 190, 191, 192, 193, 194]
+        df["is_coffee"] = df["product_id"].isin(coffee_ids).astype(int)
+
         # Scaling numerical features
         scaler = MinMaxScaler()
         num_cols = ["price"]
@@ -115,7 +120,9 @@ class Preprocessor:
             scaler.fit_transform(df[num_cols]), columns=num_cols, index=df.index
         )
 
-        final_df = pd.concat([df["product_id"], text_df, cat_df, num_df], axis=1)
+        final_df = pd.concat(
+            [df["product_id"], text_df, cat_df, df["is_coffee"], num_df], axis=1
+        )
 
         return final_df, tw, scaler, final_df.columns.tolist()
 
