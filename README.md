@@ -14,3 +14,5 @@
   - [Kafka Streams - Lightweight Real-Time Processing for Supplier Stats](https://jaehyeon.me/blog/2025-06-03-kotlin-getting-started-kafka-streams/)
   - [Flink DataStream API - Scalable Event Processing for Supplier Stats](https://jaehyeon.me/blog/2025-06-10-kotlin-getting-started-flink-datastream/)
   - [Flink Table API - Declarative Analytics for Supplier Stats in Real Time](https://jaehyeon.me/blog/2025-06-17-kotlin-getting-started-flink-table/)
+- **Building a Real-Time Product Recommender using Contextual Bandits**
+  - [Prototyping a Live Product Recommender with Python](https://jaehyeon.me/blog/2026-01-29-prototype-recommender-with-python/): Traditional recommenders struggle with cold-start users and short-term context. Contextual Multi-Armed Bandits (CMAB) continuously learns online, balancing exploitation and exploration based on real-time context. In Part 1, we build a Python prototype to simulate user behavior and validate the algorithm, laying the groundwork for scalable, real-time recommendations.
