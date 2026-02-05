@@ -119,16 +119,11 @@ class LocalRecommender:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run Live Recommendation Loop")
+    parser = argparse.ArgumentParser(description="Run Local Recommender")
     parser.add_argument(
         "--steps", type=int, default=30, help="Number of users to simulate"
     )
     parser.add_argument("--seed", type=int, default=1237, help="Random seed.")
-    # Note: Location args are no longer needed for generation, but kept for compatibility
-    parser.add_argument("--country", type=str, default="Australia")
-    parser.add_argument("--state", type=str, default="*")
-    parser.add_argument("--city", type=str, default="Melbourne")
-    parser.add_argument("--postal-code", type=str, default="*")
 
     args = parser.parse_args()
 
