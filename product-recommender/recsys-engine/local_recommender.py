@@ -4,7 +4,7 @@ import pickle
 import random
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 from faker import Faker
@@ -133,6 +133,8 @@ def main():
     args = parser.parse_args()
 
     # Setup
+    ANCHOR_DATE = datetime(2026, 1, 1)
+
     fake = Faker()
     Faker.seed(args.seed)
     random.seed(args.seed)
@@ -163,15 +165,17 @@ def main():
         user_data = random.choice(user_pool)
 
         # Backfill mandatory fields for User dataclass (excluded in CSV)
-        user_data["created_at"] = datetime.now()
-        user_data["updated_at"] = datetime.now()
+        user_data["created_at"] = ANCHOR_DATE
+        user_data["updated_at"] = ANCHOR_DATE
 
         # Rehydrate User Object
         user_obj = User.from_dict(user_data)
 
         # Randomize Visit Time (Simulate different times of day/week)
         # This fixes the issue of "same time" for every step
-        simulated_time = fake.date_time_between(start_date="-7d", end_date="now")
+        simulated_time = fake.date_time_between(
+            start_date=ANCHOR_DATE - timedelta(days=7), end_date=ANCHOR_DATE
+        )
 
         # Generate Features
         user_static_feats = User.generate_user_feature(user_obj, recsys.artifact)
