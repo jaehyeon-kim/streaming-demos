@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(sys.modules["__main__"].__file__).parent / "src" / "data"
 
 
-class LiveRecommender:
+class LocalRecommender:
     def __init__(self, data_path: Path):
         self.data_path = data_path
         self.products = []
@@ -154,7 +154,7 @@ def main():
     ground_truth = GroundTruth()
 
     # Initialize Recommender
-    recsys = LiveRecommender(DATA_DIR)
+    recsys = LocalRecommender(DATA_DIR)
     recsys.load_artifacts()
     recsys.pretrain()
 
