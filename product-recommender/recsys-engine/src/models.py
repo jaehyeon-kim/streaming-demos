@@ -2,6 +2,7 @@ import argparse
 import datetime
 import dataclasses
 import logging
+import json
 from pathlib import Path
 from collections import OrderedDict
 from typing import List, Dict, Any
@@ -17,20 +18,8 @@ setup_logger()
 logger = logging.getLogger(__name__)
 
 
-class ModelMixin:
-    @classmethod
-    def from_dict(cls, data: dict):
-        valid_keys = {f.name for f in dataclasses.fields(cls)}
-        filtered = {k: v for k, v in data.items() if k in valid_keys}
-        return cls(**filtered)
-
-    @classmethod
-    def from_rows(cls, rows: List[dict]):
-        return [cls.from_dict(row) for row in rows]
-
-
 @dataclasses.dataclass
-class User(ModelMixin):
+class User:
     user_id: int
     first_name: str
     last_name: str
@@ -47,6 +36,12 @@ class User(ModelMixin):
     traffic_source: str
     created_at: datetime.datetime
     updated_at: datetime.datetime
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        valid_keys = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in valid_keys}
+        return cls(**filtered)
 
     @classmethod
     def new(
@@ -145,3 +140,56 @@ class User(ModelMixin):
         exclude_cols = ["created_at", "updated_at"]
         write_to_csv(users, output_path, exclude_cols)
         logger.info(f"Saved raw users to: {output_path}")
+
+
+@dataclasses.dataclass
+class FeedbackEvent:
+    event_id: str
+    product_id: str
+    reward: int
+    context_vector: List[float]
+    timestamp: int
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
+            event_id=data["event_id"],
+            product_id=str(data["product_id"]),
+            reward=int(data["reward"]),
+            context_vector=data["context_vector"],
+            timestamp=int(data["timestamp"]),
+        )
+
+    def to_dict(self):
+        return {
+            "event_id": self.event_id,
+            "product_id": self.product_id,
+            "reward": self.reward,
+            "context_vector": self.context_vector,
+            "timestamp": self.timestamp,
+        }
+
+    @staticmethod
+    def schema():
+        # Returns the schema as a JSON string for the Schema Registry Client
+        return json.dumps(
+            {
+                "namespace": "io.factorhouse.avro",
+                "type": "record",
+                "name": "FeedbackEvent",
+                "fields": [
+                    {"name": "event_id", "type": "string"},
+                    {"name": "product_id", "type": "string"},
+                    {"name": "reward", "type": "int"},
+                    {
+                        "name": "context_vector",
+                        "type": {"type": "array", "items": "double"},
+                    },
+                    {
+                        "name": "timestamp",
+                        "type": "long",
+                        "logicalType": "timestamp-millis",
+                    },
+                ],
+            }
+        )

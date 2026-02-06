@@ -11,9 +11,11 @@ import pandas as pd
 import numpy as np
 from faker import Faker
 
+
 from src.logger_config import setup_logger
 from src.bandit_manager import BanditManager
 from src.models import User
+from src.infra import KafkaProducer
 from src.bandit_simulator import TimeContextGenerator, GroundTruth
 
 setup_logger()
@@ -24,24 +26,16 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(sys.modules["__main__"].__file__).parent / "src" / "data"
 
 
-class MockKafkaProducer:
-    def __init__(self, topic: str):
-        self.topic = topic
-
-    def produce(self, key, value, on_delivery=None):
-        """
-        Simulates sending a message.
-        In a real app, this sends bytes to the broker.
-        """
-        print(value)
-
-    def flush(self):
-        pass
-
-
 class EventDrivenRecommender:
     def __init__(
-        self, data_path: Path, redis_host: str, redis_port: int, redis_pass: str
+        self,
+        data_path: Path,
+        redis_host: str,
+        redis_port: int,
+        redis_pass: str,
+        bootstrap: str,
+        registry_url: str,
+        topic_name: str,
     ):
         self.data_path = data_path
 
@@ -53,12 +47,16 @@ class EventDrivenRecommender:
             redis_password=redis_pass,
         )
 
-        # Metadata Containers (Populated in load_artifacts)
+        # Metadata Containers
         self.artifact = {}
         self.product_features_map = {}
 
-        # Kafka Producer (Mock)
-        self.producer = MockKafkaProducer(topic="feedback_events")
+        # Kafka Producer
+        self.producer = KafkaProducer(
+            bootstrap=bootstrap,
+            registry_url=registry_url,
+            topic_name=topic_name,
+        )
 
         # LinUCB Hyperparameter
         self.alpha = 1.0
@@ -108,6 +106,10 @@ class EventDrivenRecommender:
         # Ensure IDs are strings for Redis lookup if Manager expects strings
         product_ids_str = [str(pid) for pid in product_ids]
 
+        # We fetch all models, which is inefficient for large number of products
+        # Consider a two stage architecture in that case
+        # 1. Candidate Generation (Retrieval) using a lightweight algorithm (e.g., Vector Search / ANN, or simple category filtering)
+        # 2. Ranking (LinUCB) by passing only a subset of IDs
         models = self.mgr.get_models(product_ids_str)
 
         # Score all products
@@ -142,7 +144,7 @@ class EventDrivenRecommender:
         }
 
         # Send
-        self.producer.produce(key=str(item_id), value=event)
+        self.producer.produce(key=str(item_id), value_dict=event)
         self.producer.flush()
 
 
@@ -152,13 +154,17 @@ def main():
         "--steps", type=int, default=None, help="Number of users to simulate"
     )
     parser.add_argument("--seed", type=int, default=1237, help="Random seed.")
+    # Kafka Config
+    parser.add_argument("--bootstrap", type=str, default="localhost:9092")
+    parser.add_argument("--registry-url", type=str, default="http://localhost:8081")
+    parser.add_argument("--topic-name", type=str, default="feedback-events")
     # Redis Config
     parser.add_argument("--redis-host", type=str, default="localhost")
     parser.add_argument("--redis-port", type=int, default=6379)
     parser.add_argument("--redis-pass", type=str, default="redis-pass")
     # Toggle for Bootstrapping (Optional)
     parser.add_argument(
-        "--bootstrap", action="store_true", help="Seed Redis from CSV before running."
+        "--pretrain", action="store_true", help="Seed Redis from CSV before running."
     )
     args = parser.parse_args()
 
@@ -184,15 +190,24 @@ def main():
 
     # Initialize Recommender (Serving Layer)
     recsys = EventDrivenRecommender(
-        DATA_DIR, args.redis_host, args.redis_port, args.redis_pass
+        data_path=DATA_DIR,
+        bootstrap=args.bootstrap,
+        registry_url=args.registry_url,
+        topic_name=args.topic_name,
+        redis_host=args.redis_host,
+        redis_port=args.redis_port,
+        redis_pass=args.redis_pass,
     )
     recsys.load_artifacts()
+
     # OPTIONAL: Bootstrap Redis State
-    if args.bootstrap:
+    if args.pretrain:
         recsys.mgr.initialize()
+
     print(
         f"\n--- STARTING EVENT-DRIVEN LOOP ({args.steps if args.steps is not None else 'infinite'} visits) ---\n"
     )
+
     s = 0
     while True:
         # Pick Random User
