@@ -13,6 +13,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven("https://packages.confluent.io/maven")
 }
 
 val flinkVersion = "1.20.1"
@@ -37,18 +38,24 @@ dependencies {
     compileOnly("org.apache.flink:flink-streaming-java:$flinkVersion")
     compileOnly("org.apache.flink:flink-clients:$flinkVersion")
     compileOnly("org.apache.flink:flink-connector-base:$flinkVersion")
+    compileOnly("org.apache.flink:flink-connector-files:$flinkVersion")
     // 'testImplementation' makes Flink available for test source compilation and execution.
     testImplementation("org.apache.flink:flink-streaming-java:$flinkVersion")
     testImplementation("org.apache.flink:flink-clients:$flinkVersion")
     testImplementation("org.apache.flink:flink-connector-base:$flinkVersion")
+    testImplementation("org.apache.flink:flink-connector-files:$flinkVersion")
     // Kafka and Avro
     implementation("org.apache.kafka:kafka-clients:3.9.1")
     implementation("org.apache.flink:flink-connector-kafka:3.4.0-1.20")
     implementation("org.apache.flink:flink-avro:$flinkVersion")
     implementation("org.apache.flink:flink-avro-confluent-registry:$flinkVersion")
     implementation("org.apache.avro:avro:$avroVersion")
-    // Redis
-    implementation(("'com.redis:redis-flink-connector-spring:0.0.10'"))
+    // Matrix Algebra
+    implementation("org.apache.commons:commons-math3:3.6.1")
+    // Redis Client (Jedis)
+    implementation("redis.clients:jedis:5.1.5")
+    // JSON Serialization
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     // Logging
     runtimeOnly("org.apache.logging.log4j:log4j-api:$log4jVersion")
     runtimeOnly("org.apache.logging.log4j:log4j-core:$log4jVersion")
@@ -94,6 +101,10 @@ tasks.named<JavaExec>("run") {
 
     environment("BOOTSTRAP", "localhost:9092")
     environment("REGISTRY_URL", "http://localhost:8081")
+    environment("REDIS_HOST", "localhost")
+
+    val resourceFile = project.file("src/main/resources/training_log.csv")
+    environment("EVENT_LOG", "file://${resourceFile.absolutePath}")
 }
 
 tasks.withType<Test> {
