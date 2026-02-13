@@ -114,12 +114,12 @@ class EventDrivenRecommender:
 
         # Score all products
         scores = {}
-        for pid_str, (A, b) in models.items():
+        for pid_str, (A_inv, b) in models.items():
             # Convert back to int key for consistency with simulator if needed,
             # or keep as str. The product_features_map uses the type from CSV (likely int).
             # Let's align on int for the return list.
             pid_int = int(pid_str)
-            scores[pid_int] = self.calculate_linucb_score(A, b, x)
+            scores[pid_int] = self.calculate_linucb_score(A_inv, b, x)
 
         # Sort
         ranked_products = sorted(scores, key=scores.get, reverse=True)[:top_k]
@@ -256,7 +256,7 @@ def main():
         s += 1
         if args.steps is not None and s >= args.steps:
             break
-        time.sleep(1)
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":

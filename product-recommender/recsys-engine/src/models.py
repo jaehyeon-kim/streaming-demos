@@ -174,7 +174,7 @@ class FeedbackEvent:
         # Returns the schema as a JSON string for the Schema Registry Client
         return json.dumps(
             {
-                "namespace": "io.factorhouse.avro",
+                "namespace": "me.jaehyeon",
                 "type": "record",
                 "name": "FeedbackEvent",
                 "fields": [
