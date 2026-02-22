@@ -1,11 +1,12 @@
-# Building a Real-Time Product Recommender using Contextual Bandits
+# Productionizing an Online Product Recommender using Event Driven Architecture
 
-## Prototyping a Live Product Recommender with Python
+A two-part write-up on building an end-to-end online product recommender, from experimental validation to a production-ready event-driven system.
 
-Traditional recommenders struggle with cold-start users and short-term context. Contextual Multi-Armed Bandits (CMAB) continuously learns online, balancing exploitation and exploration based on real-time context. In Part 1, we build a Python prototype to simulate user behavior and validate the algorithm, laying the groundwork for scalable, real-time recommendations.
+Many contextual bandit resources focus on the algorithm in isolation. Very few walk through the full journey: data generation, offline evaluation, live simulation, and streaming production architecture.
 
-See [this post](https://jaehyeon.me/blog/2026-01-29-prototype-recommender-with-python/) for more details.
+This series aims to close that gap.
 
-## Scaling Product Recommender with Event-Driven Architecture
+- [Prototyping an Online Product Recommender in Python](https://jaehyeon.me/blog/2026-01-29-prototype-recommender-with-python/): Traditional recommendation systems often struggle with cold-start users and with incorporating immediate contextual signals. In contrast, Contextual Multi-Armed Bandits, or CMAB, learn continuously in an online setting by balancing exploration and exploitation using real-time context. In Part 1, we develop a Python prototype that simulates user behavior and validates the algorithm, establishing a foundation for scalable, real-time recommendation systems.
+- [Productionizing an Online Product Recommender using Event Driven Architecture](https://jaehyeon.me/blog/2026-02-23-productionize-recommender-with-eda/): While effective for testing algorithms locally, a monolithic script cannot handle production scale. Real-world recommendation systems require low-latency inference for users and high-throughput training for model updates. This post demonstrates how to decouple these concerns using an event-driven architecture with Apache Flink, Kafka, and Redis.
 
-🚧🛠️🏗️
+![Architecture](./images/featured.gif)
