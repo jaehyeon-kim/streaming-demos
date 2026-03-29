@@ -14,5 +14,7 @@
     }
   },
   "python.terminal.activateEnvironment": false,
-  "terminal.integrated.suggest.enabled": false
+  "terminal.integrated.suggest.enabled": false,
+  "java.server.launchMode": "LightWeight",
+  "java.errors.incompleteClasspath.severity": "ignore"
 }
