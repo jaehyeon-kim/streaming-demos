@@ -13,8 +13,7 @@ import org.apache.flink.api.connector.sink2.WriterInitContext
 class RedisSink(
     private val config: AppConfig,
 ) : Sink<LinUCBModel> {
-    @Deprecated("Overrides deprecated member in superclass.")
-    override fun createWriter(context: Sink.InitContext): SinkWriter<LinUCBModel> {
+    override fun createWriter(context: WriterInitContext): SinkWriter<LinUCBModel> {
         // Use taskInfo.indexOfThisSubtask instead of context.subtaskId to fix the warning
         val subtaskId = context.taskInfo.indexOfThisSubtask
         return RedisSinkWriter(config, subtaskId)

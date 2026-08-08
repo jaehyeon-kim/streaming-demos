@@ -8,13 +8,8 @@ import java.io.Serializable
  */
 data class AppConfig(
     // Kafka Configuration
-    val bootstrapAddress: String = System.getenv("BOOTSTRAP") ?: "kafka-1:19092",
-    val registryUrl: String = System.getenv("REGISTRY_URL") ?: "http://schema:8081",
-    val registryCredentials: Map<String, String> =
-        mapOf(
-            "basic.auth.credentials.source" to "USER_INFO",
-            "basic.auth.user.info" to "admin:admin",
-        ),
+    val bootstrapAddress: String = System.getenv("BOOTSTRAP") ?: "broker-1:19092",
+    val registryUrl: String = System.getenv("REGISTRY_URL") ?: "http://karapace:8081",
     val feedbackTopic: String = "feedback-events",
     // Flink Configuration
     val jobName: String = "RecommenderParameterUpdate",
@@ -25,9 +20,12 @@ data class AppConfig(
     val maxConcurrentCheckpoints: Int = 1,
     val tolerableCheckpointFailureNumber: Int = 3,
     // Redis Configuration
-    val redisHost: String = System.getenv("REDIS_HOST") ?: "redis",
+    val redisHost: String = System.getenv("REDIS_HOST") ?: "valkey",
     val redisPort: Int = 6379,
-    val redisPass: String = "redis-pass",
+    val redisUser: String = System.getenv("REDIS_USER") ?: "user",
+    val redisPass: String = System.getenv("REDIS_PASS") ?: "password",
     // File Source (Bootstrap)
-    val eventLog: String = System.getenv("EVENT_LOG") ?: "file:///tmp/training_log.csv",
+    // Object storage, so the split enumerator on the JobManager and the readers on
+    // every TaskManager all see the same file without per-container copies.
+    val eventLog: String = System.getenv("EVENT_LOG") ?: "s3://odctl-dev/recsys/training_log.csv",
 ) : Serializable

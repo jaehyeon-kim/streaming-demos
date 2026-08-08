@@ -34,16 +34,15 @@ class RedisSinkWriter(
                 minIdle = 1
             }
 
-        // Handle optional password gracefully
-        val password = config.redisPass.ifBlank { null }
-
+        // Valkey disables the default user, so a username is mandatory alongside the password
         jedisPool =
             JedisPool(
                 poolConfig,
                 config.redisHost,
                 config.redisPort,
                 2000,
-                password,
+                config.redisUser,
+                config.redisPass,
             )
     }
 

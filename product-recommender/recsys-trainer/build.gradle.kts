@@ -5,7 +5,9 @@ import org.gradle.kotlin.dsl.withType
 plugins {
     kotlin("jvm") version "2.2.21"
     application
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    // GradleUp fork: Shadow 8.1.1 ships an ASM that cannot read the Java 21/22
+    // bytecode in the multi-release jackson-core pulled in by Flink 2.1's Kafka connector.
+    id("com.gradleup.shadow") version "8.3.9"
 }
 
 group = "me.jaehyeon"
@@ -16,7 +18,7 @@ repositories {
     maven("https://packages.confluent.io/maven")
 }
 
-val flinkVersion = "1.20.1"
+val flinkVersion = "2.1.3"
 val log4jVersion = "2.17.1"
 val avroVersion = "1.11.3"
 
@@ -31,6 +33,11 @@ configurations.all {
 
 val localRunClasspath by configurations.creating {
     extendsFrom(configurations.implementation.get(), configurations.compileOnly.get(), configurations.runtimeOnly.get())
+    // Flink 2.1 pulls lz4-java under the 'at.yawk.lz4' group while kafka-clients still pulls
+    // 'org.lz4'. Both declare the same capability, so pick the newer one to break the tie.
+    resolutionStrategy.capabilitiesResolution.withCapability("org.lz4:lz4-java") {
+        selectHighestVersion()
+    }
 }
 
 dependencies {
@@ -46,7 +53,7 @@ dependencies {
     testImplementation("org.apache.flink:flink-connector-files:$flinkVersion")
     // Kafka and Avro
     implementation("org.apache.kafka:kafka-clients:3.9.1")
-    implementation("org.apache.flink:flink-connector-kafka:3.4.0-1.20")
+    implementation("org.apache.flink:flink-connector-kafka:5.0.0-2.1")
     implementation("org.apache.flink:flink-avro:$flinkVersion")
     implementation("org.apache.flink:flink-avro-confluent-registry:$flinkVersion")
     implementation("org.apache.avro:avro:$avroVersion")
@@ -66,7 +73,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }
 
 application {
@@ -81,7 +88,16 @@ tasks.withType<ShadowJar> {
     mergeServiceFiles()
 
     // Relocate Jackson to avoid conflicts with Flink's internal Jackson version
-    relocate("com.fasterxml.jackson", "io.factorhouse.shaded.jackson")
+    relocate("com.fasterxml.jackson", "me.jaehyeon.shaded.jackson")
+
+    // odctl ships the flink-sql-* uber JARs in Flink's lib/, and those shade Avro
+    // and the Kafka client. Flink loads anything matching 'org.apache.flink.'
+    // parent-first no matter what classloader.resolve-order says, so lib/ wins and
+    // our unshaded org.apache.avro.Schema stops matching forGeneric(), throwing
+    // NoSuchMethodError at submission. Moving our copies out of that namespace
+    // makes the job use its own connector and format classes.
+    relocate("org.apache.flink.formats.avro", "me.jaehyeon.shaded.flink.formats.avro")
+    relocate("org.apache.flink.connector.kafka", "me.jaehyeon.shaded.flink.connector.kafka")
 
     dependencies {
         exclude(dependency("org.apache.logging.log4j:.*"))
@@ -102,6 +118,8 @@ tasks.named<JavaExec>("run") {
     environment("BOOTSTRAP", "localhost:9092")
     environment("REGISTRY_URL", "http://localhost:8081")
     environment("REDIS_HOST", "localhost")
+    environment("REDIS_USER", "user")
+    environment("REDIS_PASS", "password")
 
     val resourceFile = project.file("src/main/resources/training_log.csv")
     environment("EVENT_LOG", "file://${resourceFile.absolutePath}")

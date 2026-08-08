@@ -5,9 +5,9 @@ import me.jaehyeon.domain.model.LinUCBModel
 import org.apache.commons.math3.linear.MatrixUtils
 import org.apache.commons.math3.linear.RealMatrix
 import org.apache.commons.math3.linear.RealVector
+import org.apache.flink.api.common.functions.OpenContext
 import org.apache.flink.api.common.state.ValueState
 import org.apache.flink.api.common.state.ValueStateDescriptor
-import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction
 import org.apache.flink.util.Collector
 
@@ -39,7 +39,7 @@ class LinUCBUpdater : KeyedProcessFunction<String, Feedback, LinUCBModel>() {
     private val lambda = 1.0
     private val batchIntervalMs = 5000L
 
-    override fun open(parameters: Configuration) {
+    override fun open(openContext: OpenContext) {
         stateA = runtimeContext.getState(ValueStateDescriptor("state-A", Array<DoubleArray>::class.java))
         stateB = runtimeContext.getState(ValueStateDescriptor("state-b", DoubleArray::class.java))
         timerState = runtimeContext.getState(ValueStateDescriptor("timer-state", Long::class.javaObjectType))

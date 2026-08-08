@@ -15,7 +15,7 @@ object KafkaUtils {
     fun ensureTopicExists(
         config: AppConfig,
         partitions: Int = 3,
-        replication: Short = 3,
+        replication: Short = System.getenv("TOPIC_REPLICATION")?.toShortOrNull() ?: 1,
     ) {
         val props = Properties()
         props[AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG] = config.bootstrapAddress

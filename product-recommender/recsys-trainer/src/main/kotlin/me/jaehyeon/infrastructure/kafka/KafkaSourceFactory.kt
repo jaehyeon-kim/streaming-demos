@@ -29,7 +29,7 @@ class KafkaSourceFactory(
     private val logger = LoggerFactory.getLogger(KafkaSourceFactory::class.java)
     private val feedbackSchemaString = """
         {
-          "namespace": "io.factorhouse.avro",
+          "namespace": "me.jaehyeon",
           "type": "record",
           "name": "FeedbackEvent",
           "fields": [
@@ -53,11 +53,11 @@ class KafkaSourceFactory(
         startingOffsets: OffsetsInitializer,
     ): KafkaSource<Feedback> {
         logger.info("Initializing Kafka Source for topic: '{}'", topic)
-        logger.info("Using Schema Registry at: '{}' with user info strategy.", config.registryUrl)
+        logger.info("Using Schema Registry at: '{}'.", config.registryUrl)
 
         val schema =
             try {
-                getLatestSchema(topic, config.registryUrl, config.registryCredentials)
+                getLatestSchema(topic, config.registryUrl)
             } catch (e: Exception) {
                 logger.warn("Failed to fetch schema from registry (Topic might be new). Using Fallback Schema. Error: ${e.message}")
                 Schema.Parser().parse(feedbackSchemaString)
@@ -67,7 +67,6 @@ class KafkaSourceFactory(
             ConfluentRegistryAvroDeserializationSchema.forGeneric(
                 schema,
                 config.registryUrl,
-                config.registryCredentials,
             )
 
         return KafkaSource
@@ -146,10 +145,9 @@ class KafkaSourceFactory(
     fun getLatestSchema(
         topic: String,
         url: String,
-        configs: Map<String, String>,
     ): Schema {
         logger.info("Fetching latest schema for subject '$topic-value' from $url")
-        val client = CachedSchemaRegistryClient(url, 100, configs)
+        val client = CachedSchemaRegistryClient(url, 100)
         val meta = client.getLatestSchemaMetadata("$topic-value")
         return Schema.Parser().parse(meta.schema)
     }
