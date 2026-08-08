@@ -1,3 +1,6 @@
+# odctl workspace, recreated by `odctl init`
+.odctl/
+
 .ignore
 factorhouse-local
 

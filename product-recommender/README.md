@@ -15,19 +15,19 @@ This series aims to close that gap.
 
 Infrastructure is provisioned with [odctl](https://github.com/jaehyeon-kim/odctl), installed from `requirements.txt`. Docker and a JDK 17 toolchain are required.
 
+All commands run from the repository root.
+
 ```bash
-# from the repository root
 uv venv --python 3.11 venv && source venv/bin/activate
 uv pip install -r product-recommender/requirements.txt
 
-cd product-recommender
-odctl init
-python recsys-engine/prepare_data.py
-(cd recsys-trainer && ./gradlew shadowJar)
+python product-recommender/recsys-engine/prepare_data.py
+(cd product-recommender/recsys-trainer && ./gradlew shadowJar)
 
+odctl init
 odctl up kafka-lite flink-full valkey
-./submit-job.sh
-python recsys-engine/eda_recommender.py
+./product-recommender/submit-job.sh
+python product-recommender/recsys-engine/eda_recommender.py
 ```
 
 Flink UI is at `:8082`, Kafka UI at `:8086`. Tear down with `odctl down kafka-lite flink-full valkey`.

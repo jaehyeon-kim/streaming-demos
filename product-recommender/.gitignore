@@ -1,6 +1,3 @@
-# odctl workspace, recreated by `odctl init`
-.odctl/
-
 recsys-engine/src/data/*.csv
 recsys-engine/src/data/*.pkl
 !recsys-engine/src/data/products.csv
