@@ -1,7 +1,11 @@
 import logging
 
-from confluent_kafka import SerializingProducer
-from confluent_kafka.serialization import StringSerializer
+from confluent_kafka import Producer
+from confluent_kafka.serialization import (
+    StringSerializer,
+    SerializationContext,
+    MessageField,
+)
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
@@ -18,27 +22,23 @@ class KafkaProducer:
         self.registry_url = registry_url
         self.topic_name = topic_name
 
-        # Initialize Schema Registry Client
-        self.schema_registry_conf = {
-            "url": self.registry_url,
-            "basic.auth.user.info": "admin:admin",
-        }
+        # Initialize Schema Registry Client (Karapace runs unauthenticated)
+        self.schema_registry_conf = {"url": self.registry_url}
         self.schema_registry_client = SchemaRegistryClient(self.schema_registry_conf)
 
-        # Initialize Avro Serializer
+        # Initialize Serializers
+        self.key_serializer = StringSerializer("utf_8")
         self.avro_serializer = AvroSerializer(
             self.schema_registry_client,
             FeedbackEvent.schema(),
             lambda obj, ctx: obj.to_dict(),
         )
 
-        # Initialize Serializing Producer
+        # Initialize Producer
         producer_conf = {
             "bootstrap.servers": self.bootstrap,
-            "key.serializer": StringSerializer("utf_8"),
-            "value.serializer": self.avro_serializer,
         }
-        self.producer = SerializingProducer(producer_conf)
+        self.producer = Producer(producer_conf)
 
     def produce(self, key, value_dict):
         """
@@ -53,8 +53,15 @@ class KafkaProducer:
                 logger.error(f"Delivery failed for record {msg.key()}: {err}")
 
         try:
+            # Serialize explicitly, the SerializingProducer is deprecated
             self.producer.produce(
-                topic=self.topic_name, key=key, value=event_obj, on_delivery=on_delivery
+                topic=self.topic_name,
+                key=self.key_serializer(key),
+                value=self.avro_serializer(
+                    event_obj,
+                    SerializationContext(self.topic_name, MessageField.VALUE),
+                ),
+                on_delivery=on_delivery,
             )
             self.producer.poll(0)
         except ValueError as e:

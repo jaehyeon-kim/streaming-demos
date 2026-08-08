@@ -32,6 +32,7 @@ class EventDrivenRecommender:
         data_path: Path,
         redis_host: str,
         redis_port: int,
+        redis_user: str,
         redis_pass: str,
         bootstrap: str,
         registry_url: str,
@@ -44,6 +45,7 @@ class EventDrivenRecommender:
             data_path,
             redis_host=redis_host,
             redis_port=redis_port,
+            redis_user=redis_user,
             redis_password=redis_pass,
         )
 
@@ -155,13 +157,17 @@ def main():
     )
     parser.add_argument("--seed", type=int, default=1237, help="Random seed.")
     # Kafka Config
-    parser.add_argument("--bootstrap", type=str, default="localhost:9092")
-    parser.add_argument("--registry-url", type=str, default="http://localhost:8081")
+    # 127.0.0.1 rather than localhost: on an IPv6-first host, localhost resolves to
+    # ::1 first, and the schema registry client (httpx) fails outright instead of
+    # falling back to IPv4 the way librdkafka and redis-py do.
+    parser.add_argument("--bootstrap", type=str, default="127.0.0.1:9092")
+    parser.add_argument("--registry-url", type=str, default="http://127.0.0.1:8081")
     parser.add_argument("--topic-name", type=str, default="feedback-events")
     # Redis Config
-    parser.add_argument("--redis-host", type=str, default="localhost")
+    parser.add_argument("--redis-host", type=str, default="127.0.0.1")
     parser.add_argument("--redis-port", type=int, default=6379)
-    parser.add_argument("--redis-pass", type=str, default="redis-pass")
+    parser.add_argument("--redis-user", type=str, default="user")
+    parser.add_argument("--redis-pass", type=str, default="password")
     # Toggle for Bootstrapping (Optional)
     parser.add_argument(
         "--pretrain", action="store_true", help="Seed Redis from CSV before running."
@@ -196,6 +202,7 @@ def main():
         topic_name=args.topic_name,
         redis_host=args.redis_host,
         redis_port=args.redis_port,
+        redis_user=args.redis_user,
         redis_pass=args.redis_pass,
     )
     recsys.load_artifacts()

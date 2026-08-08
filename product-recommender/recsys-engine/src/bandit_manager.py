@@ -16,12 +16,18 @@ logger = logging.getLogger(__name__)
 
 class BanditManager:
     def __init__(
-        self, data_path: Path, redis_host: str, redis_port: int, redis_password: str
+        self,
+        data_path: Path,
+        redis_host: str,
+        redis_port: int,
+        redis_user: str,
+        redis_password: str,
     ):
         self.data_path = data_path
         self.r = redis.Redis(
             host=redis_host,
             port=redis_port,
+            username=redis_user,
             password=redis_password,
             decode_responses=True,
         )
